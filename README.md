@@ -25,6 +25,8 @@ This is a static website: there is no build step, backend, or package installati
 
 ## Deployment
 
+Only an explicit allowlist of public files is uploaded to GitHub Pages: the HTML pages, CSS, JavaScript, images, video, GLB exports, icons, sitemap and robots file. The site builder in `tools/build_public_site.py` excludes source utilities, tests, screenshot evidence, workflow configuration and repository documentation. The GitHub Actions screenshots remain available as separate workflow artifacts instead of becoming public website files. The builder verifies that all copied bytes match their originals.
+
 Pushes to `main` trigger the GitHub Pages workflow in `.github/workflows/pages.yml`. GitHub Pages must be enabled with **GitHub Actions** as its source in the repository settings.
 
 ## Project links

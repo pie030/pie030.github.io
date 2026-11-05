@@ -64,10 +64,12 @@ jobs:
           retention-days: 7
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+      - name: Assemble allowlisted public website
+        run: python3 tools/build_public_site.py --output "$RUNNER_TEMP/portfolio-public-site"
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ${{ runner.temp }}/portfolio-public-site
       - name: Publish site
         id: deployment
         uses: actions/deploy-pages@v4
