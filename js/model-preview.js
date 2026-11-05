@@ -52,6 +52,8 @@
     const src = stage.dataset.modelSrc;
     const poster = stage.dataset.modelPoster;
     const alt = stage.dataset.modelAlt || 'Interactive 3D model';
+    const initialOrbit = stage.dataset.modelOrbit || '35deg 70deg auto';
+    const initialExposure = stage.dataset.modelExposure || '1';
 
     if (!launch || !reset || !feedback || !src || !poster) continue;
     launch.hidden = false;
@@ -96,9 +98,9 @@
         viewer.setAttribute('interaction-prompt', 'none');
         viewer.setAttribute('environment-image', 'neutral');
         viewer.setAttribute('shadow-intensity', '0.65');
-        viewer.setAttribute('exposure', '1');
+        viewer.setAttribute('exposure', initialExposure);
         viewer.setAttribute('loading', 'eager');
-        viewer.setAttribute('camera-orbit', '35deg 70deg auto');
+        viewer.setAttribute('camera-orbit', initialOrbit);
         viewer.setAttribute('reveal', 'auto');
 
         activeViewer = viewer;
@@ -123,7 +125,7 @@
 
     reset.addEventListener('click', () => {
       if (!activeViewer) return;
-      activeViewer.cameraOrbit = '35deg 70deg auto';
+      activeViewer.cameraOrbit = initialOrbit;
       activeViewer.cameraTarget = 'auto auto auto';
       if (typeof activeViewer.jumpCameraToGoal === 'function') activeViewer.jumpCameraToGoal();
       announce('Camera view reset.');
