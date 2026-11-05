@@ -76,7 +76,8 @@ def make_camera(scene, center, corners, direction, name):
     x_size = max(p.x for p in projected) - min(p.x for p in projected)
     y_size = max(p.y for p in projected) - min(p.y for p in projected)
     aspect = scene.render.resolution_x / scene.render.resolution_y
-    camera_data.ortho_scale = max(y_size, x_size / aspect) * 1.18
+    # Blender's ortho_scale is the horizontal frame span in landscape output.
+    camera_data.ortho_scale = max(x_size, y_size * aspect) * 1.12
     # Validate the real camera projection instead of assuming how ortho_scale
     # maps to width and height. This prevents clipping on any view.
     for _ in range(12):
@@ -84,7 +85,7 @@ def make_camera(scene, center, corners, direction, name):
         projected_ndc = [world_to_camera_view(scene, camera, point) for point in corners]
         xs = [point.x for point in projected_ndc]
         ys = [point.y for point in projected_ndc]
-        if min(xs) >= 0.06 and max(xs) <= 0.94 and min(ys) >= 0.06 and max(ys) <= 0.94:
+        if min(xs) >= 0.04 and max(xs) <= 0.96 and min(ys) >= 0.04 and max(ys) <= 0.96:
             break
         camera_data.ortho_scale *= 1.2
     else:
@@ -111,7 +112,8 @@ def main():
         meshes = [obj for obj in scene.objects if obj.type == 'MESH']
         if not meshes:
             raise RuntimeError(f'No meshes in {blend_path}')
-        corners = [obj.matrix_world @ Vector(corner) for obj in meshes for corner in obj.bound_box]
+        # Fit to actual geometry rather than oversized per-object AABBs.
+        corners = [obj.matrix_world @ vertex.co for obj in meshes for vertex in obj.data.vertices]
         if not all(math.isfinite(float(v)) for p in corners for v in p):
             raise RuntimeError(f'Non-finite world-space bounds: {name}')
         low = Vector(tuple(min(p[i] for p in corners) for i in range(3)))
