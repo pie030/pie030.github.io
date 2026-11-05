@@ -51,7 +51,7 @@ To recreate editable Blender scenes from the existing GLBs, install Blender 4.x 
 blender --background --factory-startup --python tools/recover_blender_projects.py -- --output-dir blender
 ```
 
-This creates three `.blend` files and an import report in `blender/`. A separate **Recover editable Blender scenes** GitHub Actions workflow can also generate and validate the three `.blend` files as a downloadable artifact (14-day retention). The import restores mesh objects and materials from the GLBs, not the original editing history, modifiers, or modeling source files. Generated Blender files are intentionally not committed to the website repository.
+This creates three `.blend` files and an import report in `blender/`. A separate **Recover editable Blender scenes** GitHub Actions workflow also generates and validates the three `.blend` files as a downloadable artifact (14-day retention), including a portable import report and opening instructions. The import restores mesh objects and materials from the GLBs, not the original editing history, modifiers, or modeling source files. Generated Blender files are intentionally not committed to the website repository.
 
 ## Media performance
 

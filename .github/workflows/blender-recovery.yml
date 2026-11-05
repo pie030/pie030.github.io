@@ -36,20 +36,26 @@ jobs:
           folder = Path("blender")
           report = json.loads((folder / "import_report.json").read_text(encoding="utf-8"))
           expected = {
-              "Creekside_Cottage_Watchtower",
-              "Coastal_Fishing_Hut_Pier",
-              "Rural_Railway_Stop_Freight_Wagon",
+              "Creekside_Cottage_Watchtower": (28, 15582, 14),
+              "Coastal_Fishing_Hut_Pier": (49, 13718, 27),
+              "Rural_Railway_Stop_Freight_Wagon": (64, 21722, 37),
           }
-          assert set(report) == expected, f"Unexpected project list: {list(report)}"
+          assert set(report) == set(expected), f"Unexpected project list: {list(report)}"
           for name, record in report.items():
               path = folder / (name + ".blend")
               assert path.is_file(), f"Missing {path}"
               assert path.stat().st_size > 1000, f"Suspiciously small Blender file: {path}"
               assert path.open("rb").read(7) == b"BLENDER", f"Invalid .blend header: {path}"
               assert record["mesh_objects"] > 0 and record["polygons"] > 0
+              actual = (record["mesh_objects"], record["triangles"], record["materials"])
+              assert actual == expected[name], f"Unexpected mesh/triangle/material counts for {name}: {actual}"
+              assert len(record["source_sha256"]) == 64
+              assert record["blend_file"] == path.name
               print(f"OK {name}: {path.stat().st_size} bytes; {record['mesh_objects']} meshes; {record['polygons']} polygons")
           print("All three editable Blender scene files generated and checked.")
           PY
+      - name: Include opening instructions
+        run: cp docs/BLENDER_RECOVERY.md blender/LEIA_ME.md
       - name: Upload recovered Blender scenes
         uses: actions/upload-artifact@v4
         with:
@@ -57,5 +63,6 @@ jobs:
           path: |
             blender/*.blend
             blender/import_report.json
+            blender/LEIA_ME.md
           if-no-files-found: error
           retention-days: 14

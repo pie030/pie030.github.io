@@ -8,6 +8,7 @@ restore original modeling history, unapplied modifiers, or procedural setups.
 Run locally with Blender 4.x; Blender is not required to serve the website.
 """
 import argparse
+import hashlib
 import json
 import math
 import sys
@@ -59,10 +60,13 @@ def main():
         bpy.ops.wm.save_as_mainfile(filepath=str(output), check_existing=False)
         report[name] = {
             "source": source,
-            "blend_file": str(output),
+            "blend_file": output.name,
+            "blender_version": bpy.app.version_string,
+            "source_sha256": hashlib.sha256(model_path.read_bytes()).hexdigest(),
             "mesh_objects": len(meshes),
             "vertices": vertex_count,
             "polygons": polygon_count,
+            "triangles": sum(max(0, len(poly.vertices) - 2) for obj in meshes for poly in obj.data.polygons),
             "materials": len(bpy.data.materials),
         }
         print(f"Saved {output} ({len(meshes)} mesh objects, {polygon_count} polygons)")
