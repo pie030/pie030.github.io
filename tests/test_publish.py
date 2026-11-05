@@ -46,20 +46,25 @@ class PublicSiteTests(unittest.TestCase):
             root = Path(folder)
             bundle = root / "model-viewer.min.js"
             bundle.write_bytes(b"/* pinned viewer fixture */" + b"x" * 120_000)
+            license_path = root / "LICENSE"
+            license_path.write_text("Apache License\nVersion 2.0, January 2004\n", encoding="utf-8")
             output = root / "site"
-            report = builder.build(output, viewer_bundle=bundle)
+            report = builder.build(output, viewer_bundle=bundle, viewer_license=license_path)
             local = output / builder.LOCAL_VIEWER
             self.assertEqual(local.read_bytes(), bundle.read_bytes())
+            self.assertEqual((output / builder.LOCAL_VIEWER_LICENSE).read_bytes(), license_path.read_bytes())
             self.assertEqual(report["local_viewer_bytes"], bundle.stat().st_size)
             self.assertEqual(
                 {p.relative_to(output) for p in output.rglob("*") if p.is_file()},
-                set(builder.public_files()) | {builder.LOCAL_VIEWER},
+                set(builder.public_files()) | {builder.LOCAL_VIEWER, builder.LOCAL_VIEWER_LICENSE},
             )
             with self.assertRaises(ValueError):
-                builder.build(root / "missing", viewer_bundle=root / "absent.js")
+                builder.build(root / "missing", viewer_bundle=root / "absent.js", viewer_license=license_path)
             bundle.write_bytes(b"bad")
             with self.assertRaises(ValueError):
-                builder.build(root / "stub", viewer_bundle=bundle)
+                builder.build(root / "stub", viewer_bundle=bundle, viewer_license=license_path)
+            with self.assertRaises(ValueError):
+                builder.build(root / "no-license", viewer_bundle=bundle)
 
     def test_rejects_output_inside_repository(self):
         with self.assertRaises(ValueError):

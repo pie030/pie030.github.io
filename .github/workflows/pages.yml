@@ -25,6 +25,15 @@ jobs:
     steps:
       - name: Check out site
         uses: actions/checkout@v5
+      - name: Prefer GitHub Actions as the sole Pages publisher
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api --method PUT "repos/${{ github.repository }}/pages" -f build_type=workflow; then
+            echo "GitHub Pages source is GitHub Actions."
+          else
+            echo "::warning::Could not switch Pages source. Set Settings > Pages > Build and deployment > Source to GitHub Actions manually."
+          fi
       - name: Run static quality checks
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Validate recovery script syntax
@@ -58,7 +67,8 @@ jobs:
         run: |
           python3 tools/build_public_site.py \
             --output "$RUNNER_TEMP/portfolio-public-site" \
-            --viewer-bundle "/tmp/portfolio-viewer/node_modules/@google/model-viewer/dist/model-viewer.min.js"
+            --viewer-bundle "/tmp/portfolio-viewer/node_modules/@google/model-viewer/dist/model-viewer.min.js" \
+            --viewer-license "/tmp/portfolio-viewer/node_modules/@google/model-viewer/LICENSE"
       - name: Verify shipped GLBs in software WebGL
         env:
           PORTFOLIO_ROOT: ${{ runner.temp }}/portfolio-public-site

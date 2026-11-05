@@ -30,6 +30,7 @@ ROOT_FILES = (
     "sitemap.xml",
 )
 LOCAL_VIEWER = Path("js/model-viewer.min.js")
+LOCAL_VIEWER_LICENSE = Path("js/model-viewer.LICENSE.txt")
 COLOR_CORRECTED_GLB = frozenset({
     'assets/creekside-yup-v03.glb',
     'assets/coastal-fishing-hut-pier-yup.glb',
@@ -63,7 +64,7 @@ def public_files(source=ROOT):
     return tuple(result)
 
 
-def build(output, source=ROOT, viewer_bundle=None):
+def build(output, source=ROOT, viewer_bundle=None, viewer_license=None):
     source = Path(source).resolve()
     output = Path(output).resolve()
     if output == source or source in output.parents or output in source.parents:
@@ -94,6 +95,8 @@ def build(output, source=ROOT, viewer_bundle=None):
         total_bytes += destination.stat().st_size
     expected = set(files)
     bundle_size = 0
+    if (viewer_bundle is None) != (viewer_license is None):
+        raise ValueError("A self-hosted viewer requires its redistribution license")
     if viewer_bundle is not None:
         bundle = Path(viewer_bundle)
         if not bundle.is_file() or bundle.is_symlink():
@@ -108,6 +111,18 @@ def build(output, source=ROOT, viewer_bundle=None):
         bundle_size = destination.stat().st_size
         total_bytes += bundle_size
         expected.add(LOCAL_VIEWER)
+        license_source = Path(viewer_license)
+        if not license_source.is_file() or license_source.is_symlink():
+            raise ValueError(f"Missing or unsafe viewer license: {license_source}")
+        license_text = license_source.read_text(encoding="utf-8")
+        if "Apache License" not in license_text or "Version 2.0" not in license_text:
+            raise ValueError("Unexpected viewer redistribution license")
+        license_destination = output / LOCAL_VIEWER_LICENSE
+        shutil.copy2(license_source, license_destination)
+        if hashlib.sha256(license_source.read_bytes()).digest() != hashlib.sha256(license_destination.read_bytes()).digest():
+            raise ValueError("Viewer license copy failed integrity verification")
+        total_bytes += license_destination.stat().st_size
+        expected.add(LOCAL_VIEWER_LICENSE)
     actual = {p.relative_to(output) for p in output.rglob("*") if p.is_file()}
     if actual != expected:
         raise ValueError("Published file list does not match the allowlist")
@@ -121,8 +136,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True, help="Directory outside the repository")
     parser.add_argument("--viewer-bundle", type=Path, help="Pinned local model-viewer distribution to include")
+    parser.add_argument("--viewer-license", type=Path, help="Redistribution license for the pinned viewer")
     args = parser.parse_args()
-    print(json.dumps(build(args.output, viewer_bundle=args.viewer_bundle), indent=2))
+    print(json.dumps(build(args.output, viewer_bundle=args.viewer_bundle,
+                           viewer_license=args.viewer_license), indent=2))
 
 
 if __name__ == "__main__":
