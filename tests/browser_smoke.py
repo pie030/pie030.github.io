@@ -232,5 +232,89 @@ class BrowserSmokeTests(unittest.TestCase):
         self.assert_no_errors()
 
 
+    def assert_headings_fit_viewport(self, page):
+        # Scroll width alone misses headings clipped by overflow:hidden.
+        clipped = page.evaluate("""() => {
+          const width = document.documentElement.clientWidth;
+          const issues = [];
+          for (const heading of document.querySelectorAll('h1, h2, h3')) {
+            if (!heading.getClientRects().length) continue;
+            const range = document.createRange();
+            range.selectNodeContents(heading);
+            for (const rect of range.getClientRects()) {
+              if (rect.width < 2 || rect.height < 2) continue;
+              if (rect.left < -3 || rect.right > width + 3) {
+                issues.push({
+                  heading: heading.textContent.trim().slice(0, 65),
+                  left: Math.round(rect.left),
+                  right: Math.round(rect.right),
+                  width,
+                });
+              }
+            }
+          }
+          return issues.slice(0, 12);
+        }""")
+        self.assertFalse(clipped, f"Heading text clipped on {page.url}: {clipped}")
+
+    def test_08_narrow_viewports_and_large_text_zoom(self):
+        # Cover 320px phones and tablet widths not exercised by the 390px tests.
+        for path in ("", *CASES, *GAMES):
+            for width in (320, 360, 768):
+                with self.subTest(path=path or "home", width=width):
+                    page = self.open_page(path, width=width, height=800)
+                    self.assert_no_overflow(page)
+                    self.assert_headings_fit_viewport(page)
+                    if width == 320 and path in ("", CASES[0]):
+                        name = "home-320.png" if not path else "creekside-320.png"
+                        self.screenshot(page, name)
+        # CSS zoom approximates a high browser text/layout zoom without
+        # requiring a physical device or changing the approved design.
+        for path in ("", CASES[0]):
+            with self.subTest(path=path or "home", zoom="200%"):
+                page = self.open_page(path, width=1280, height=900)
+                page.evaluate("document.documentElement.style.zoom = '2'")
+                self.assert_no_overflow(page)
+                self.assert_headings_fit_viewport(page)
+        self.assert_no_errors()
+
+    def test_09_keyboard_only_navigation_and_dialog_focus(self):
+        home = self.open_page(width=390, height=844, mobile=True)
+        menu = home.locator("#menuBtn")
+        menu.focus()
+        home.keyboard.press("Enter")
+        self.assertEqual(menu.get_attribute("aria-expanded"), "true")
+        home.keyboard.press("Escape")
+        self.assertEqual(menu.get_attribute("aria-expanded"), "false")
+        self.assertTrue(menu.evaluate("(el) => document.activeElement === el"))
+        thumb = home.locator("[data-lightbox]").first
+        thumb.focus()
+        home.keyboard.press("Enter")
+        self.assertTrue(home.locator("#lightbox").evaluate("(el) => el.classList.contains('open')"))
+        home.keyboard.press("Tab")
+        self.assertTrue(home.locator("#lightboxClose").evaluate("(el) => document.activeElement === el"))
+        home.keyboard.press("Escape")
+        self.assertTrue(thumb.evaluate("(el) => document.activeElement === el"))
+
+        project = self.open_page(CASES[0])
+        trigger = project.locator("[data-zoom]").first
+        trigger.focus()
+        project.keyboard.press("Enter")
+        dialog = project.locator("[data-gallery-dialog]")
+        self.assertTrue(dialog.is_visible())
+        project.keyboard.press("Tab")
+        self.assertTrue(project.locator("[data-gallery-prev]").evaluate(
+            "(el) => document.activeElement === el"))
+        project.keyboard.press("Shift+Tab")
+        self.assertTrue(project.locator("[data-gallery-close]").evaluate(
+            "(el) => document.activeElement === el"))
+        project.keyboard.press("ArrowLeft")
+        total = project.locator("[data-zoom]").count()
+        self.assertTrue(project.locator("[data-gallery-counter]").inner_text().startswith(
+            str(total).zfill(2) + " / "))
+        project.keyboard.press("Escape")
+        self.assertTrue(trigger.evaluate("(el) => document.activeElement === el"))
+        self.assert_no_errors()
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
