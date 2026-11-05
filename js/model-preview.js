@@ -6,7 +6,12 @@
 (() => {
   'use strict';
 
+  // Prefer the first-party pinned bundle; keep CDNs for development/recovery.
+  const localViewerUrl = document.currentScript?.src
+    ? new URL('model-viewer.min.js', document.currentScript.src).href
+    : null;
   const sources = [
+    ...(localViewerUrl ? [localViewerUrl] : []),
     'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js',
     'https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js'
   ];

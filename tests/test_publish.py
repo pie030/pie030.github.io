@@ -41,6 +41,26 @@ class PublicSiteTests(unittest.TestCase):
             for important in ("index.html", "404.html", "assets/creekside-yup-v03.glb", "assets/wildgrade-gameplay-film.mp4"):
                 self.assertTrue((output / important).is_file(), important)
 
+    def test_local_viewer_bundle_is_integrity_checked_and_allowlisted(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            bundle = root / "model-viewer.min.js"
+            bundle.write_bytes(b"/* pinned viewer fixture */" + b"x" * 120_000)
+            output = root / "site"
+            report = builder.build(output, viewer_bundle=bundle)
+            local = output / builder.LOCAL_VIEWER
+            self.assertEqual(local.read_bytes(), bundle.read_bytes())
+            self.assertEqual(report["local_viewer_bytes"], bundle.stat().st_size)
+            self.assertEqual(
+                {p.relative_to(output) for p in output.rglob("*") if p.is_file()},
+                set(builder.public_files()) | {builder.LOCAL_VIEWER},
+            )
+            with self.assertRaises(ValueError):
+                builder.build(root / "missing", viewer_bundle=root / "absent.js")
+            bundle.write_bytes(b"bad")
+            with self.assertRaises(ValueError):
+                builder.build(root / "stub", viewer_bundle=bundle)
+
     def test_rejects_output_inside_repository(self):
         with self.assertRaises(ValueError):
             builder.build(ROOT / "public")

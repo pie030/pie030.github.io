@@ -55,7 +55,10 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Assemble allowlisted public website
-        run: python3 tools/build_public_site.py --output "$RUNNER_TEMP/portfolio-public-site"
+        run: |
+          python3 tools/build_public_site.py \
+            --output "$RUNNER_TEMP/portfolio-public-site" \
+            --viewer-bundle "/tmp/portfolio-viewer/node_modules/@google/model-viewer/dist/model-viewer.min.js"
       - name: Verify shipped GLBs in software WebGL
         env:
           PORTFOLIO_ROOT: ${{ runner.temp }}/portfolio-public-site

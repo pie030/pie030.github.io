@@ -23,6 +23,7 @@ from playwright.sync_api import sync_playwright
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ROOT = Path(os.environ.get('PORTFOLIO_ROOT', str(REPO_ROOT))).resolve()
 OUTPUT = REPO_ROOT / "test-results" / "webgl"
+PUBLISHED_BUILD = "PORTFOLIO_ROOT" in os.environ
 BUNDLE = Path(os.environ.get(
     "VIEWER_BUNDLE",
     "/tmp/portfolio-viewer/node_modules/@google/model-viewer/dist/model-viewer.min.js",
@@ -99,15 +100,24 @@ class RealWebGLTests(unittest.TestCase):
                                     (response.url, response.status)
                                 ) if response.url.endswith(".glb") else None,
                             )
-                            page.route(
-                                "**/model-viewer.min.js",
-                                lambda route: route.fulfill(
-                                    status=200,
-                                    content_type="text/javascript",
-                                    body=bundle,
-                                    headers={"access-control-allow-origin": "*"},
-                                ),
-                            )
+                            # Published tests use the actual first-party viewer, not
+                            # a test-supplied module or a third-party CDN.
+                            external_requests = []
+                            if PUBLISHED_BUILD:
+                                page.route("https://**/*", lambda route: route.abort())
+                                page.on("request", lambda request: external_requests.append(
+                                    request.url
+                                ) if request.url.startswith("https://") else None)
+                            else:
+                                page.route(
+                                    "**/model-viewer.min.js",
+                                    lambda route: route.fulfill(
+                                        status=200,
+                                        content_type="text/javascript",
+                                        body=bundle,
+                                        headers={"access-control-allow-origin": "*"},
+                                    ),
+                                )
                             started = time.monotonic()
                             try:
                                 page.goto(
@@ -178,6 +188,11 @@ class RealWebGLTests(unittest.TestCase):
                                         msg=f"Camera did not reset on {path}",
                                     )
                                 self.assertFalse(errors, f"Uncaught JS errors: {errors}")
+                                if PUBLISHED_BUILD:
+                                    self.assertFalse(
+                                        external_requests,
+                                        f"Published 3D preview attempted external CDN requests: {external_requests}",
+                                    )
                                 page.locator("[data-model-close]").click()
                                 self.assertEqual(stage.locator("model-viewer").count(), 0)
                                 self.assertTrue(stage.locator(".model-placeholder img").is_visible())
@@ -207,15 +222,18 @@ class RealWebGLTests(unittest.TestCase):
                             )
                             try:
                                 mobile_page = mobile.new_page()
-                                mobile_page.route(
-                                    "**/model-viewer.min.js",
-                                    lambda route: route.fulfill(
-                                        status=200,
-                                        content_type="text/javascript",
-                                        body=bundle,
-                                        headers={"access-control-allow-origin": "*"},
-                                    ),
-                                )
+                                if PUBLISHED_BUILD:
+                                    mobile_page.route("https://**/*", lambda route: route.abort())
+                                else:
+                                    mobile_page.route(
+                                        "**/model-viewer.min.js",
+                                        lambda route: route.fulfill(
+                                            status=200,
+                                            content_type="text/javascript",
+                                            body=bundle,
+                                            headers={"access-control-allow-origin": "*"},
+                                        ),
+                                    )
                                 mobile_page.goto(
                                     f"http://127.0.0.1:{server.server_port}/{path}",
                                     wait_until="load",
