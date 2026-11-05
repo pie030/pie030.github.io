@@ -8,6 +8,7 @@ availability does not determine the result.
 CI installs @google/model-viewer@3.5.0 under /tmp/portfolio-viewer.
 """
 import functools
+import io
 import http.server
 import json
 import os
@@ -16,6 +17,7 @@ import time
 import unittest
 from pathlib import Path
 
+from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +39,26 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
 
 
 class RealWebGLTests(unittest.TestCase):
+    def assert_visible_geometry(self, png, label):
+        # Detect a blank WebGL canvas, not just a successful load event.
+        with Image.open(io.BytesIO(png)) as image:
+            image = image.convert("RGB")
+            width, height = image.size
+            center = image.crop((
+                int(width * 0.15), int(height * 0.20),
+                int(width * 0.85), int(height * 0.80),
+            )).resize((80, 50))
+            pixels = list(center.getdata())
+        unique_colors = len(set(pixels))
+        luminances = [sum(pixel) / 3 for pixel in pixels]
+        self.assertGreater(unique_colors, 100, f"Blank/flat WebGL render: {label}")
+        self.assertGreater(
+            max(luminances) - min(luminances), 60,
+            f"Insufficient visible contrast in render: {label}",
+        )
+        return unique_colors
+
+
     def test_real_glb_rendering_and_camera_reset(self):
         self.assertTrue(BUNDLE.is_file(), f"Pinned viewer bundle missing: {BUNDLE}")
         OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -126,32 +148,38 @@ class RealWebGLTests(unittest.TestCase):
                                     f"GLB did not return HTTP 200: {glb_responses}",
                                 )
                                 page.wait_for_timeout(400)
-                                stage.screenshot(
+                                screenshot = stage.screenshot(
                                     path=str(OUTPUT / (Path(path).stem + "-webgl.png")),
                                     animations="disabled",
                                 )
-                                # Visual QA variants: test framing and exposure without
-                                # changing the live site. These images are for review.
-                                for zoom, exposure in ((85, 0.8), (70, 0.65), (60, 0.55)):
-                                    viewer.evaluate("""(el, settings) => {
-                                        el.setAttribute('camera-orbit', '35deg 70deg ' + settings.zoom + '%');
-                                        el.setAttribute('exposure', String(settings.exposure));
-                                        el.jumpCameraToGoal();
-                                    }""", {"zoom": zoom, "exposure": exposure})
-                                    page.wait_for_timeout(300)
-                                    stage.screenshot(
-                                        path=str(OUTPUT / (
-                                            Path(path).stem + f"-zoom{zoom}-exp{exposure}.png"
-                                        )),
-                                        animations="disabled",
-                                    )
+                                colors = self.assert_visible_geometry(screenshot, path)
+                                initial_orbit = viewer.evaluate("""(el) => {
+                                    const orbit = el.getCameraOrbit();
+                                    return [orbit.theta, orbit.phi, orbit.radius];
+                                }""")
+                                viewer.evaluate("""(el) => {
+                                    el.cameraOrbit = '90deg 60deg 85%';
+                                    el.jumpCameraToGoal();
+                                }""")
+                                changed = viewer.evaluate("(el) => el.getCameraOrbit().theta")
+                                self.assertGreater(abs(changed - initial_orbit[0]), 0.1)
                                 page.locator("[data-model-reset]").click()
                                 self.assertIn(
                                     "reset", page.locator("[data-model-feedback]").inner_text().lower()
                                 )
+                                restored = viewer.evaluate("""(el) => {
+                                    const orbit = el.getCameraOrbit();
+                                    return [orbit.theta, orbit.phi, orbit.radius];
+                                }""")
+                                for before, after in zip(initial_orbit, restored):
+                                    self.assertAlmostEqual(
+                                        before, after, delta=max(0.05, abs(before) * 0.02),
+                                        msg=f"Camera did not reset on {path}",
+                                    )
                                 self.assertFalse(errors, f"Uncaught JS errors: {errors}")
                                 report[path] = {
                                     "loaded": True,
+                                    "visible_color_samples": colors,
                                     "webgl2": True,
                                     "canvas": canvas,
                                     "glb_http_status": [s for _, s in glb_responses],
@@ -198,9 +226,12 @@ class RealWebGLTests(unittest.TestCase):
                                     ),
                                     f"Mobile GLB failed: {path}",
                                 )
-                                mobile_stage.screenshot(
+                                mobile_screenshot = mobile_stage.screenshot(
                                     path=str(OUTPUT / (Path(path).stem + "-mobile-webgl.png")),
                                     animations="disabled",
+                                )
+                                report[path]["mobile_visible_color_samples"] = (
+                                    self.assert_visible_geometry(mobile_screenshot, path + " mobile")
                                 )
                                 dimensions = mobile_page.evaluate("""() => ({
                                     client: document.documentElement.clientWidth,
