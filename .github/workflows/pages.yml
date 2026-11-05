@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Check out site
         uses: actions/checkout@v4
-      - name: Run 13 static quality checks
+      - name: Run static quality checks
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Validate recovery script syntax
         run: python3 -m py_compile tools/recover_blender_projects.py

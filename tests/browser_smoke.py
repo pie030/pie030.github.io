@@ -60,7 +60,7 @@ class BrowserSmokeTests(unittest.TestCase):
         for context in self.contexts:
             context.close()
 
-    def open_page(self, path="", width=1440, height=900, mobile=False, no_webgl=False, fake_viewer=False):
+    def open_page(self, path="", width=1440, height=900, mobile=False, no_webgl=False, fake_viewer=False, request_log=None):
         context = self.browser.new_context(
             viewport={"width": width, "height": height},
             device_scale_factor=1,
@@ -71,6 +71,8 @@ class BrowserSmokeTests(unittest.TestCase):
         self.contexts.append(context)
         page = context.new_page()
         page.on("pageerror", lambda error: self.errors.append(f"{path}: {error}"))
+        if request_log is not None:
+            page.on("request", lambda request: request_log.append(request.url))
         if no_webgl:
             page.add_init_script("""(() => {
               const original = HTMLCanvasElement.prototype.getContext;
@@ -188,13 +190,14 @@ class BrowserSmokeTests(unittest.TestCase):
     def test_05_model_is_opt_in_and_has_graceful_fallback(self):
         for path in CASES:
             with self.subTest(path=path):
-                page = self.open_page(path, no_webgl=True)
                 requests = []
-                page.on("request", lambda request: requests.append(request.url))
+                page = self.open_page(path, no_webgl=True, request_log=requests)
                 launch = page.locator("[data-model-launch]")
                 self.assertTrue(launch.is_visible())
                 self.assertEqual(page.locator("[data-model-preview] model-viewer").count(), 0)
                 self.assertFalse(any(url.endswith(".glb") for url in requests))
+                self.assertTrue(all(url.startswith(self.base) for url in requests),
+                                f"Unexpected network request before 3D opt-in: {requests}")
                 launch.click()
                 self.assertIn("could not start", page.locator("[data-model-feedback]").inner_text())
                 self.assertTrue(launch.is_visible())
