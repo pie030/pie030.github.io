@@ -60,7 +60,7 @@ class BrowserSmokeTests(unittest.TestCase):
         for context in self.contexts:
             context.close()
 
-    def open_page(self, path="", width=1440, height=900, mobile=False, no_webgl=False):
+    def open_page(self, path="", width=1440, height=900, mobile=False, no_webgl=False, fake_viewer=False):
         context = self.browser.new_context(
             viewport={"width": width, "height": height},
             device_scale_factor=1,
@@ -78,6 +78,21 @@ class BrowserSmokeTests(unittest.TestCase):
                 if (type === 'webgl2') return null;
                 return original.call(this, type, ...args);
               };
+            })();""")
+        if fake_viewer:
+            # Exercise the successful UI transition without external CDN or GPU.
+            # This is NOT a test of real GLB rendering.
+            page.add_init_script("""(() => {
+              const original = HTMLCanvasElement.prototype.getContext;
+              HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+                if (type === 'webgl2') return {};
+                return original.call(this, type, ...args);
+              };
+              customElements.define('model-viewer', class extends HTMLElement {
+                connectedCallback() {
+                  queueMicrotask(() => this.dispatchEvent(new Event('load')));
+                }
+              });
             })();""")
         page.goto(f"{self.base}/{path}", wait_until="load", timeout=30000)
         return page
@@ -188,7 +203,24 @@ class BrowserSmokeTests(unittest.TestCase):
                 self.assert_no_overflow(page)
         self.assert_no_errors()
 
-    def test_06_not_found_navigation(self):
+    def test_06_model_preview_success_ui_with_simulated_viewer(self):
+        for path in CASES:
+            with self.subTest(path=path):
+                page = self.open_page(path, fake_viewer=True)
+                launch = page.locator("[data-model-launch]")
+                launch.click()
+                self.assertTrue(page.locator("[data-model-preview]").evaluate(
+                    "(el) => el.classList.contains('is-ready')"
+                ))
+                self.assertEqual(page.locator("[data-model-preview] model-viewer").count(), 1)
+                self.assertFalse(launch.is_visible())
+                reset = page.locator("[data-model-reset]")
+                self.assertTrue(reset.is_visible())
+                reset.click()
+                self.assertIn("reset", page.locator("[data-model-feedback]").inner_text().lower())
+        self.assert_no_errors()
+
+    def test_07_not_found_navigation(self):
         page = self.open_page("404.html", width=390, height=844, mobile=True)
         self.assertIn("Not found", page.locator("h1").inner_text())
         page.locator("main a").click()
