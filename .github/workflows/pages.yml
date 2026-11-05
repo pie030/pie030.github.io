@@ -24,7 +24,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out site
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Run static quality checks
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Validate recovery script syntax
@@ -35,7 +35,7 @@ jobs:
           node --check js/model-preview.js
           node --check js/project-gallery.js
       - name: Prepare Chromium for browser smoke tests
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: pip
@@ -62,7 +62,7 @@ jobs:
         run: python tests/browser_webgl.py
       - name: Preserve browser screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: portfolio-browser-evidence
           path: |

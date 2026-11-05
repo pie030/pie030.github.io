@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out model assets
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install Blender from Ubuntu packages
         run: |
           sudo apt-get update -qq
@@ -84,7 +84,7 @@ jobs:
       - name: Include opening instructions
         run: cp docs/BLENDER_RECOVERY.md blender/LEIA_ME.md
       - name: Upload recovered Blender scenes
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: blender-scenes-recovered
           path: |
