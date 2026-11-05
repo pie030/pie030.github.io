@@ -48,6 +48,7 @@
   for (const stage of document.querySelectorAll('[data-model-preview]')) {
     const launch = stage.querySelector('[data-model-launch]');
     const reset = stage.querySelector('[data-model-reset]');
+    const close = stage.querySelector('[data-model-close]');
     const feedback = stage.parentElement.querySelector('[data-model-feedback]');
     const src = stage.dataset.modelSrc;
     const poster = stage.dataset.modelPoster;
@@ -58,7 +59,7 @@
     );
     const initialExposure = stage.dataset.modelExposure || '1';
 
-    if (!launch || !reset || !feedback || !src || !poster) continue;
+    if (!launch || !reset || !close || !feedback || !src || !poster) continue;
     launch.hidden = false;
     let activeViewer = null;
     let busy = false;
@@ -66,6 +67,7 @@
     const announce = (message) => { feedback.textContent = message; };
 
     const fail = (message) => {
+      const wasReady = stage.classList.contains('is-ready');
       if (activeViewer) {
         activeViewer.remove();
         activeViewer = null;
@@ -75,8 +77,10 @@
       launch.disabled = false;
       launch.hidden = false;
       reset.hidden = true;
+      close.hidden = true;
       busy = false;
       announce(message || 'The interactive preview is unavailable. The image and GLB download still work.');
+      if (wasReady) launch.focus();
     };
 
     launch.addEventListener('click', async () => {
@@ -107,6 +111,11 @@
         viewer.setAttribute('reveal', 'auto');
 
         activeViewer = viewer;
+        viewer.addEventListener('error', () => {
+          if (activeViewer === viewer && stage.classList.contains('is-ready')) {
+            fail('Interactive 3D stopped working. The static preview has been restored.');
+          }
+        });
         const loaded = new Promise((resolve, reject) => {
           viewer.addEventListener('load', resolve, { once: true });
           viewer.addEventListener('error', () => reject(new Error('Model failed to load')), { once: true });
@@ -119,11 +128,26 @@
         stage.classList.add('is-ready');
         launch.hidden = true;
         reset.hidden = false;
+        close.hidden = false;
         busy = false;
         announce('3D viewer ready. Drag to rotate; scroll or pinch to zoom.');
       } catch (error) {
         fail('Interactive 3D could not start on this device or connection. The still image and GLB download remain available.');
       }
+    });
+
+    close.addEventListener('click', () => {
+      if (!activeViewer) return;
+      activeViewer.remove();
+      activeViewer = null;
+      stage.classList.remove('is-ready', 'is-loading');
+      launch.disabled = false;
+      launch.hidden = false;
+      reset.hidden = true;
+      close.hidden = true;
+      busy = false;
+      announce('Static preview restored. Select Explore in 3D to reopen.');
+      launch.focus();
     });
 
     reset.addEventListener('click', () => {

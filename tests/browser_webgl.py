@@ -178,6 +178,13 @@ class RealWebGLTests(unittest.TestCase):
                                         msg=f"Camera did not reset on {path}",
                                     )
                                 self.assertFalse(errors, f"Uncaught JS errors: {errors}")
+                                page.locator("[data-model-close]").click()
+                                self.assertEqual(stage.locator("model-viewer").count(), 0)
+                                self.assertTrue(stage.locator(".model-placeholder img").is_visible())
+                                self.assertTrue(page.locator("[data-model-launch]").is_visible())
+                                self.assertIn(
+                                    "restored", page.locator("[data-model-feedback]").inner_text().lower()
+                                )
                                 report[path] = {
                                     "loaded": True,
                                     "visible_color_samples": colors,

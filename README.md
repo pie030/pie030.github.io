@@ -41,7 +41,7 @@ The public project repositories are showcases; they do not expose the full game 
 
 ## Interactive 3D previews
 
-The Creekside, Coastal and Rural Railway case studies offer opt-in, interactive inspection of their actual downloadable GLB assets. Static posters and direct downloads remain available if WebGL is unsupported or a third-party viewer library cannot load. The preview uses the open-source Google model-viewer component loaded on demand from a CDN; no build step is needed. Camera framing and exposure are calibrated from captured WebGL renders; users can still rotate and zoom freely. The site packaging step corrects the legacy flat-color RGB material factors from sRGB to glTF linear space for the public GLBs, leaving the source GLBs unchanged. The packaged GLBs are rendered again in CI on desktop and mobile to verify the actual published files.
+The Creekside, Coastal and Rural Railway case studies offer opt-in, interactive inspection of their actual downloadable GLB assets. Visitors can close the 3D viewer to restore the still image, reopen it later, or reset the camera without leaving the page. Static posters and direct downloads remain available if WebGL is unsupported or a third-party viewer library cannot load. The preview uses the open-source Google model-viewer component loaded on demand from a CDN; no build step is needed. Camera framing and exposure are calibrated from captured WebGL renders; users can still rotate and zoom freely. The site packaging step corrects the legacy flat-color RGB material factors from sRGB to glTF linear space for the public GLBs, leaving the source GLBs unchanged. The packaged GLBs are rendered again in CI on desktop and mobile to verify the actual published files.
 
 ## Quality checks and Blender recovery
 

@@ -178,6 +178,7 @@ class PortfolioQualityTests(unittest.TestCase):
                 self.assertTrue((ROOT / local_target(path, stages[0].get("data-model-poster", ""))[0]).is_file())
                 self.assertTrue(any("data-model-launch" in attrs for _, attrs in tags))
                 self.assertTrue(any("data-model-reset" in attrs for _, attrs in tags))
+                self.assertTrue(any("data-model-close" in attrs for _, attrs in tags))
                 self.assertTrue(any(tag == "script" and attrs.get("src") == "../js/model-preview.js" for tag, attrs in tags))
 
     def test_11_raster_assets_have_expected_headers(self):

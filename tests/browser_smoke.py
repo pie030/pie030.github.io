@@ -221,6 +221,24 @@ class BrowserSmokeTests(unittest.TestCase):
                 self.assertTrue(reset.is_visible())
                 reset.click()
                 self.assertIn("reset", page.locator("[data-model-feedback]").inner_text().lower())
+                close = page.locator("[data-model-close]")
+                self.assertTrue(close.is_visible())
+                close.click()
+                self.assertEqual(page.locator("[data-model-preview] model-viewer").count(), 0)
+                self.assertTrue(page.locator("[data-model-preview] .model-placeholder img").is_visible())
+                self.assertTrue(launch.is_visible())
+                self.assertTrue(launch.evaluate("(el) => document.activeElement === el"))
+                self.assertIn("restored", page.locator("[data-model-feedback]").inner_text().lower())
+                launch.click()
+                self.assertTrue(page.locator("[data-model-preview]").evaluate(
+                    "(el) => el.classList.contains('is-ready')"
+                ))
+                page.locator("[data-model-preview] model-viewer").evaluate(
+                    "(el) => el.dispatchEvent(new Event('error'))"
+                )
+                self.assertEqual(page.locator("[data-model-preview] model-viewer").count(), 0)
+                self.assertTrue(launch.is_visible())
+                self.assertIn("restored", page.locator("[data-model-feedback]").inner_text().lower())
         self.assert_no_errors()
 
     def test_07_not_found_navigation(self):
