@@ -16,6 +16,7 @@ from pathlib import Path
 
 import bpy
 from mathutils import Vector
+from bpy_extras.object_utils import world_to_camera_view
 
 ROOT = Path(__file__).resolve().parents[1]
 MODELS = (
@@ -33,7 +34,7 @@ VIEWS = {
 def configure_scene(scene, center, size):
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'CPU'
-    scene.cycles.samples = 8
+    scene.cycles.samples = 24
     # Ubuntu's Blender package lacks OpenImageDenoiser; render without it.
     for layer in scene.view_layers:
         layer.cycles.use_denoising = False
@@ -76,6 +77,18 @@ def make_camera(scene, center, corners, direction, name):
     y_size = max(p.y for p in projected) - min(p.y for p in projected)
     aspect = scene.render.resolution_x / scene.render.resolution_y
     camera_data.ortho_scale = max(y_size, x_size / aspect) * 1.18
+    # Validate the real camera projection instead of assuming how ortho_scale
+    # maps to width and height. This prevents clipping on any view.
+    for _ in range(12):
+        bpy.context.view_layer.update()
+        projected_ndc = [world_to_camera_view(scene, camera, point) for point in corners]
+        xs = [point.x for point in projected_ndc]
+        ys = [point.y for point in projected_ndc]
+        if min(xs) >= 0.06 and max(xs) <= 0.94 and min(ys) >= 0.06 and max(ys) <= 0.94:
+            break
+        camera_data.ortho_scale *= 1.2
+    else:
+        raise RuntimeError(f'Cannot frame complete model in camera {name}')
     return camera
 
 
