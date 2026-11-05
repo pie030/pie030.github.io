@@ -52,3 +52,7 @@ blender --background --factory-startup --python tools/recover_blender_projects.p
 ```
 
 This creates three `.blend` files and an import report in `blender/`. The import restores mesh objects and materials from the GLBs, not the original editing history, modifiers, or modeling source files. Generated Blender files are intentionally not committed to the website repository.
+
+## Media performance
+
+Wildgrade and Dungeon Descent use the existing, byte-identical screenshot and icon files instead of repeating base64 images inside their HTML. This reduced their HTML documents from 235,350 to 15,424 bytes (93%) and from 146,873 to 14,609 bytes (90%) respectively, without altering the images. External files can be cached and lazy-loaded by the browser.

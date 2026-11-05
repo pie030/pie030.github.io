@@ -192,6 +192,10 @@ class PortfolioQualityTests(unittest.TestCase):
                 else:
                     self.assertEqual(header[:2], b"\xff\xd8")
 
+        for page in self.pages:
+            with self.subTest(page=page, check='no embedded raster images'):
+                self.assertNotIn('data:image/', read_page(page))
+
     def test_12_sitemap_covers_project_pages(self):
         document = ET.parse(ROOT / "sitemap.xml")
         locations = [node.text for node in document.findall(".//{*}loc")]
