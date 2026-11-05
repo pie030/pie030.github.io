@@ -43,7 +43,7 @@ The Creekside, Coastal and Rural Railway case studies offer opt-in, interactive 
 
 ## Quality checks and Blender recovery
 
-The deployment workflow runs 12 dependency-free static tests before publishing. They check page structure, internal links, image metadata, sitemap coverage, downloadable GLB containers, and the optional viewer integration. The workflow also runs Chromium browser smoke tests on desktop and mobile layouts, including gallery navigation, keyboard focus, horizontal overflow and 3D fallback. Screenshots are retained for 7 days as GitHub Actions artifacts. A separate integration test loads each real GLB in Chromium with software WebGL and the pinned model-viewer library, then captures the rendered canvas and checks camera reset. This validates the browser rendering path on CI, but not every physical GPU, browser or device.
+The deployment workflow runs 13 dependency-free static tests before publishing. They check page structure, internal links, image metadata, sitemap coverage, downloadable GLB containers, GLB vertex/index integrity, triangle geometry, and the optional viewer integration. The workflow also runs Chromium browser smoke tests on desktop and mobile layouts, including gallery navigation, keyboard focus, horizontal overflow and 3D fallback. Screenshots are retained for 7 days as GitHub Actions artifacts. A separate integration test loads each real GLB in Chromium with software WebGL and the pinned model-viewer library, then captures the rendered canvas and checks camera reset. This validates the browser rendering path on CI, but not every physical GPU, browser or device.
 
 To recreate editable Blender scenes from the existing GLBs, install Blender 4.x and run:
 
