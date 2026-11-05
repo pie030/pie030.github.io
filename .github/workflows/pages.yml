@@ -52,8 +52,14 @@ jobs:
           npm install --prefix /tmp/portfolio-viewer --no-save --package-lock=false --ignore-scripts --no-audit --no-fund @google/model-viewer@3.5.0
       - name: Verify actual GLB rendering in software WebGL
         run: python tests/browser_webgl.py
-      - name: Capture corrected glTF color previews for review
-        run: python tests/browser_color_preview.py
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Assemble allowlisted public website
+        run: python3 tools/build_public_site.py --output "$RUNNER_TEMP/portfolio-public-site"
+      - name: Verify shipped GLBs in software WebGL
+        env:
+          PORTFOLIO_ROOT: ${{ runner.temp }}/portfolio-public-site
+        run: python tests/browser_webgl.py
       - name: Preserve browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -64,10 +70,6 @@ jobs:
             test-results/webgl/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-      - name: Assemble allowlisted public website
-        run: python3 tools/build_public_site.py --output "$RUNNER_TEMP/portfolio-public-site"
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:

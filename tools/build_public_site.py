@@ -1,6 +1,9 @@
 """Build a minimal GitHub Pages directory from an explicit allowlist.
 
-Only files needed by the public portfolio are published. Test screenshots,
+Only files needed by the public portfolio are published. The three legacy
+GLB materials are normalized from sRGB-authored values to glTF linear values
+in the output copy only; original geometry and repository files are untouched.
+Test screenshots,
 CI configuration, source utilities, documentation and repository metadata are
 intentionally excluded. The source files are never modified.
 
@@ -10,9 +13,12 @@ import argparse
 import hashlib
 import json
 import shutil
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'tools'))
+from convert_gltf_colors import convert_glb  # noqa: E402
 ROOT_FILES = (
     ".nojekyll",
     "404.html",
@@ -23,6 +29,11 @@ ROOT_FILES = (
     "robots.txt",
     "sitemap.xml",
 )
+COLOR_CORRECTED_GLB = frozenset({
+    'assets/creekside-yup-v03.glb',
+    'assets/coastal-fishing-hut-pier-yup.glb',
+    'assets/rural-railway-stop-freight-wagon-yup.glb',
+})
 DIRECTORIES = {
     "assets": frozenset({".webp", ".jpg", ".jpeg", ".png", ".glb", ".mp4"}),
     "css": frozenset({".css"}),
@@ -63,6 +74,7 @@ def build(output, source=ROOT):
         shutil.rmtree(output)
     output.mkdir(parents=True)
     total_bytes = 0
+    corrected_count = 0
     for relative in files:
         origin = source / relative
         destination = output / relative
@@ -72,11 +84,20 @@ def build(output, source=ROOT):
         copied_hash = hashlib.sha256(destination.read_bytes()).digest()
         if original_hash != copied_hash:
             raise ValueError(f"Copy verification failed: {relative}")
+        if relative.as_posix() in COLOR_CORRECTED_GLB:
+            converted, materials = convert_glb(origin.read_bytes())
+            destination.write_bytes(converted)
+            corrected_count += 1
+            if materials < 1:
+                raise ValueError(f"No material colors corrected: {relative}")
         total_bytes += destination.stat().st_size
     actual = {p.relative_to(output) for p in output.rglob("*") if p.is_file()}
     if actual != set(files):
         raise ValueError("Published file list does not match the allowlist")
-    return {"files": len(files), "bytes": total_bytes, "megabytes": round(total_bytes / 1048576, 2)}
+    if corrected_count != len(COLOR_CORRECTED_GLB):
+        raise ValueError('Not all required GLBs were color-corrected')
+    return {"files": len(files), "bytes": total_bytes, "megabytes": round(total_bytes / 1048576, 2),
+            "color_corrected_glbs": corrected_count}
 
 
 def main():

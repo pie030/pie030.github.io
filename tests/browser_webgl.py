@@ -20,8 +20,9 @@ from pathlib import Path
 from PIL import Image
 from playwright.sync_api import sync_playwright
 
-ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "test-results" / "webgl"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get('PORTFOLIO_ROOT', str(REPO_ROOT))).resolve()
+OUTPUT = REPO_ROOT / "test-results" / "webgl"
 BUNDLE = Path(os.environ.get(
     "VIEWER_BUNDLE",
     "/tmp/portfolio-viewer/node_modules/@google/model-viewer/dist/model-viewer.min.js",
