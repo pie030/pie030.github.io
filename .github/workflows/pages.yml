@@ -46,12 +46,20 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Verify desktop, mobile and gallery interactions
         run: python tests/browser_smoke.py
+      - name: Install pinned 3D viewer for real WebGL integration tests
+        run: |
+          mkdir -p /tmp/portfolio-viewer
+          npm install --prefix /tmp/portfolio-viewer --no-save --package-lock=false --ignore-scripts --no-audit --no-fund @google/model-viewer@3.5.0
+      - name: Verify actual GLB rendering in software WebGL
+        run: python tests/browser_webgl.py
       - name: Preserve browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: portfolio-browser-evidence
-          path: test-results/browser/
+          path: |
+            test-results/browser/
+            test-results/webgl/
           if-no-files-found: ignore
           retention-days: 7
       - name: Configure GitHub Pages
