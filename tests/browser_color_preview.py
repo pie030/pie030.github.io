@@ -74,9 +74,17 @@ def main():
                         page.wait_for_timeout(400)
                         output = OUTPUT / (Path(page_path).stem + '-color-corrected.png')
                         stage.screenshot(path=str(output), animations='disabled')
+                        viewer = stage.locator('model-viewer')
+                        variants = []
+                        for exposure in (0.9, 1.2, 1.5):
+                            viewer.evaluate('(el, value) => { el.exposure = value; }', exposure)
+                            page.wait_for_timeout(350)
+                            variant = OUTPUT / (Path(page_path).stem + f'-linear-exposure-{exposure:.1f}.png')
+                            stage.screenshot(path=str(variant), animations='disabled')
+                            variants.append(variant.name)
                         if errors:
                             raise RuntimeError(f'JS errors in {page_path}: {errors}')
-                        results[page_path] = {'materials_converted': count, 'image': output.name}
+                        results[page_path] = {'materials_converted': count, 'image': output.name, 'exposure_variants': variants}
                         print(f'PREVIEW {page_path}: {count} materials, {output.name}')
                     finally:
                         context.close()
