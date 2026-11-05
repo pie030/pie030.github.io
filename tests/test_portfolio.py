@@ -61,6 +61,8 @@ def local_target(source, url):
     route = unquote(parsed.path)
     if not route:
         return source, parsed.fragment
+    if route == '/':
+        return 'index.html', parsed.fragment
     if route.startswith("/"):
         result = posixpath.normpath(route.lstrip("/"))
     else:
@@ -188,7 +190,7 @@ class PortfolioQualityTests(unittest.TestCase):
                     self.assertEqual(header[:4], b"RIFF")
                     self.assertEqual(header[8:12], b"WEBP")
                 else:
-                    self.assertEqual(header[:2], b"\\xff\\xd8")
+                    self.assertEqual(header[:2], b"\xff\xd8")
 
     def test_12_sitemap_covers_project_pages(self):
         document = ET.parse(ROOT / "sitemap.xml")
