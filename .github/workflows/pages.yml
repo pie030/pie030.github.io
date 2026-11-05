@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Check out site
         uses: actions/checkout@v4
+      - name: Run 12 static quality checks
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static site

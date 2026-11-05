@@ -40,3 +40,15 @@ The public project repositories are showcases; they do not expose the full game 
 ## Interactive 3D previews
 
 The Creekside, Coastal and Rural Railway case studies offer opt-in, interactive inspection of their actual downloadable GLB assets. Static posters and direct downloads remain available if WebGL is unsupported or a third-party viewer library cannot load. The preview uses the open-source Google model-viewer component loaded on demand from a CDN; no build step is needed.
+
+## Quality checks and Blender recovery
+
+The deployment workflow runs 12 dependency-free static tests before publishing. They check page structure, internal links, image metadata, sitemap coverage, downloadable GLB containers, and the optional viewer integration. They do not replace visual testing in a real browser.
+
+To recreate editable Blender scenes from the existing GLBs, install Blender 4.x and run:
+
+```bash
+blender --background --factory-startup --python tools/recover_blender_projects.py -- --output-dir blender
+```
+
+This creates three `.blend` files and an import report in `blender/`. The import restores mesh objects and materials from the GLBs, not the original editing history, modifiers, or modeling source files. Generated Blender files are intentionally not committed to the website repository.
