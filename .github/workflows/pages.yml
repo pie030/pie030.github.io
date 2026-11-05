@@ -52,6 +52,8 @@ jobs:
           npm install --prefix /tmp/portfolio-viewer --no-save --package-lock=false --ignore-scripts --no-audit --no-fund @google/model-viewer@3.5.0
       - name: Verify actual GLB rendering in software WebGL
         run: python tests/browser_webgl.py
+      - name: Capture corrected glTF color previews for review
+        run: python tests/browser_color_preview.py
       - name: Preserve browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
