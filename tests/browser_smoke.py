@@ -95,6 +95,19 @@ class BrowserSmokeTests(unittest.TestCase):
         )
 
     def screenshot(self, page, name):
+        # A full-page screenshot does not itself trigger off-screen lazy images.
+        # Load and decode them first, then reset scroll for reproducible evidence.
+        missing = page.evaluate("""async () => {
+          const images = [...document.images].filter(img => img.getAttribute('src'));
+          for (const image of images) image.loading = 'eager';
+          await Promise.all(images.map(image => image.decode().catch(() => {})));
+          document.documentElement.style.scrollBehavior = 'auto';
+          window.scrollTo(0, 0);
+          await new Promise(resolve => requestAnimationFrame(resolve));
+          return images.filter(img => !img.complete || img.naturalWidth === 0)
+            .map(img => img.currentSrc || img.src);
+        }""")
+        self.assertFalse(missing, f"Images failed to load on {page.url}: {missing}")
         page.screenshot(path=str(EVIDENCE / name), full_page=True, animations="disabled")
 
     def assert_no_errors(self):

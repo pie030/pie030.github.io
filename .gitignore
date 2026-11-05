@@ -1,3 +1,4 @@
 blender/
 *.blend1
 __pycache__/
+test-results/
