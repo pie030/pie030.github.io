@@ -268,12 +268,12 @@ class BrowserSmokeTests(unittest.TestCase):
                     if width == 320 and path in ("", CASES[0]):
                         name = "home-320.png" if not path else "creekside-320.png"
                         self.screenshot(page, name)
-        # CSS zoom approximates a high browser text/layout zoom without
-        # requiring a physical device or changing the approved design.
+        # Browser zoom reflows CSS pixels: a 1280px display at 200% has
+        # approximately a 640px CSS layout viewport. Setting CSS zoom on
+        # the root is NOT equivalent and produces a false scrollWidth.
         for path in ("", CASES[0]):
-            with self.subTest(path=path or "home", zoom="200%"):
-                page = self.open_page(path, width=1280, height=900)
-                page.evaluate("document.documentElement.style.zoom = '2'")
+            with self.subTest(path=path or "home", zoom="200%-equivalent"):
+                page = self.open_page(path, width=640, height=450)
                 self.assert_no_overflow(page)
                 self.assert_headings_fit_viewport(page)
         self.assert_no_errors()
