@@ -68,10 +68,14 @@
     launch.hidden = false;
     let activeViewer = null;
     let busy = false;
+    let loadVersion = 0;
+    const closeLabel = close.textContent;
 
     const announce = (message) => { feedback.textContent = message; };
 
     const fail = (message) => {
+      loadVersion += 1;
+      close.textContent = closeLabel;
       const wasReady = stage.classList.contains('is-ready');
       if (activeViewer) {
         activeViewer.remove();
@@ -91,7 +95,10 @@
     launch.addEventListener('click', async () => {
       if (busy || activeViewer) return;
       busy = true;
+      const version = ++loadVersion;
       launch.disabled = true;
+      close.hidden = false;
+      close.textContent = 'Cancel loading';
       stage.classList.add('is-loading');
       announce('Preparing the interactive 3D viewer…');
 
@@ -100,6 +107,7 @@
           throw new Error('WebGL 2 is unavailable');
         }
         await loadViewerLibrary();
+        if (version !== loadVersion) return;
 
         const viewer = document.createElement('model-viewer');
         viewer.setAttribute('src', src);
@@ -128,30 +136,37 @@
 
         stage.appendChild(viewer);
         await timeout(loaded, 30000);
-        if (activeViewer !== viewer) return;
+        if (version !== loadVersion || activeViewer !== viewer) return;
         stage.classList.remove('is-loading');
         stage.classList.add('is-ready');
         launch.hidden = true;
         reset.hidden = false;
         close.hidden = false;
+        close.textContent = closeLabel;
         busy = false;
         announce('3D viewer ready. Drag to rotate; scroll or pinch to zoom.');
       } catch (error) {
+        if (version !== loadVersion) return;
         fail('Interactive 3D could not start on this device or connection. The still image and GLB download remain available.');
       }
     });
 
     close.addEventListener('click', () => {
-      if (!activeViewer) return;
-      activeViewer.remove();
+      if (!activeViewer && !busy) return;
+      const wasLoading = busy;
+      loadVersion += 1;
+      if (activeViewer) activeViewer.remove();
       activeViewer = null;
       stage.classList.remove('is-ready', 'is-loading');
       launch.disabled = false;
       launch.hidden = false;
       reset.hidden = true;
       close.hidden = true;
+      close.textContent = closeLabel;
       busy = false;
-      announce('Static preview restored. Select Explore in 3D to reopen.');
+      announce(wasLoading
+        ? '3D loading cancelled. The static preview is available.'
+        : 'Static preview restored. Select Explore in 3D to reopen.');
       launch.focus();
     });
 

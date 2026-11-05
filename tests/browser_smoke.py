@@ -60,7 +60,7 @@ class BrowserSmokeTests(unittest.TestCase):
         for context in self.contexts:
             context.close()
 
-    def open_page(self, path="", width=1440, height=900, mobile=False, no_webgl=False, fake_viewer=False, request_log=None):
+    def open_page(self, path="", width=1440, height=900, mobile=False, no_webgl=False, fake_viewer=False, slow_viewer=False, request_log=None):
         context = self.browser.new_context(
             viewport={"width": width, "height": height},
             device_scale_factor=1,
@@ -81,7 +81,7 @@ class BrowserSmokeTests(unittest.TestCase):
                 return original.call(this, type, ...args);
               };
             })();""")
-        if fake_viewer:
+        if fake_viewer or slow_viewer:
             # Exercise the successful UI transition without external CDN or GPU.
             # This is NOT a test of real GLB rendering.
             page.add_init_script("""(() => {
@@ -92,10 +92,16 @@ class BrowserSmokeTests(unittest.TestCase):
               };
               customElements.define('model-viewer', class extends HTMLElement {
                 connectedCallback() {
-                  queueMicrotask(() => this.dispatchEvent(new Event('load')));
+                  if (window.__slowViewer) {
+                    setTimeout(() => this.dispatchEvent(new Event('load')), 700);
+                  } else {
+                    queueMicrotask(() => this.dispatchEvent(new Event('load')));
+                  }
                 }
               });
             })();""")
+            if slow_viewer:
+                page.add_init_script("window.__slowViewer = true;")
         page.goto(f"{self.base}/{path}", wait_until="load", timeout=30000)
         return page
 
@@ -239,6 +245,32 @@ class BrowserSmokeTests(unittest.TestCase):
                 self.assertEqual(page.locator("[data-model-preview] model-viewer").count(), 0)
                 self.assertTrue(launch.is_visible())
                 self.assertIn("restored", page.locator("[data-model-feedback]").inner_text().lower())
+        self.assert_no_errors()
+
+    def test_07_cancel_slow_3d_loading_without_late_reopen(self):
+        page = self.open_page(CASES[0], slow_viewer=True)
+        launch = page.locator("[data-model-launch]")
+        launch.click()
+        close = page.locator("[data-model-close]")
+        self.assertTrue(close.is_visible())
+        self.assertIn("cancel", close.inner_text().lower())
+        close.click()
+        stage = page.locator("[data-model-preview]")
+        self.assertEqual(stage.locator("model-viewer").count(), 0)
+        self.assertTrue(launch.is_visible())
+        self.assertIn("cancelled", page.locator("[data-model-feedback]").inner_text().lower())
+        page.wait_for_timeout(850)
+        self.assertFalse(stage.evaluate("(el) => el.classList.contains('is-ready')"))
+        self.assertEqual(stage.locator("model-viewer").count(), 0)
+        launch.click()
+        page.wait_for_function(
+            "() => document.querySelector('[data-model-preview]').classList.contains('is-ready')",
+            timeout=5000,
+        )
+        self.assertEqual(stage.locator("model-viewer").count(), 1)
+        self.assertIn("close", close.inner_text().lower())
+        close.click()
+        self.assertTrue(launch.is_visible())
         self.assert_no_errors()
 
     def test_07_not_found_navigation(self):
