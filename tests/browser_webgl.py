@@ -160,6 +160,56 @@ class RealWebGLTests(unittest.TestCase):
                                 print(f"PASS {path}: GLB rendered in {report[path]['elapsed_seconds']}s")
                             finally:
                                 context.close()
+
+                            # Real mobile emulation (not merely a responsive screenshot).
+                            mobile = browser.new_context(
+                                viewport={"width": 390, "height": 844},
+                                is_mobile=True,
+                                has_touch=True,
+                                device_scale_factor=1,
+                                reduced_motion="reduce",
+                            )
+                            try:
+                                mobile_page = mobile.new_page()
+                                mobile_page.route(
+                                    "**/model-viewer.min.js",
+                                    lambda route: route.fulfill(
+                                        status=200,
+                                        content_type="text/javascript",
+                                        body=bundle,
+                                        headers={"access-control-allow-origin": "*"},
+                                    ),
+                                )
+                                mobile_page.goto(
+                                    f"http://127.0.0.1:{server.server_port}/{path}",
+                                    wait_until="load",
+                                    timeout=30000,
+                                )
+                                mobile_page.locator("[data-model-launch]").click()
+                                mobile_page.wait_for_function("""() => {
+                                    const stage = document.querySelector('[data-model-preview]');
+                                    return stage.classList.contains('is-ready') ||
+                                        stage.querySelector('[data-model-launch]')?.disabled === false;
+                                }""", timeout=45000)
+                                mobile_stage = mobile_page.locator("[data-model-preview]")
+                                self.assertTrue(
+                                    mobile_stage.evaluate(
+                                        "(el) => el.classList.contains('is-ready')"
+                                    ),
+                                    f"Mobile GLB failed: {path}",
+                                )
+                                mobile_stage.screenshot(
+                                    path=str(OUTPUT / (Path(path).stem + "-mobile-webgl.png")),
+                                    animations="disabled",
+                                )
+                                dimensions = mobile_page.evaluate("""() => ({
+                                    client: document.documentElement.clientWidth,
+                                    scroll: document.documentElement.scrollWidth,
+                                })""")
+                                self.assertLessEqual(dimensions["scroll"], dimensions["client"] + 2)
+                                report[path]["mobile_loaded"] = True
+                            finally:
+                                mobile.close()
                 finally:
                     browser.close()
         finally:

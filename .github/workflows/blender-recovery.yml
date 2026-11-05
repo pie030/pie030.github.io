@@ -7,6 +7,8 @@ on:
     paths:
       - .github/workflows/blender-recovery.yml
       - tools/recover_blender_projects.py
+      - tools/render_blender_qa.py
+      - docs/BLENDER_RECOVERY.md
       - assets/*.glb
 
 permissions:
