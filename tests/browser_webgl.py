@@ -130,6 +130,21 @@ class RealWebGLTests(unittest.TestCase):
                                     path=str(OUTPUT / (Path(path).stem + "-webgl.png")),
                                     animations="disabled",
                                 )
+                                # Visual QA variants: test framing and exposure without
+                                # changing the live site. These images are for review.
+                                for zoom, exposure in ((85, 0.8), (70, 0.65), (60, 0.55)):
+                                    viewer.evaluate("""(el, settings) => {
+                                        el.setAttribute('camera-orbit', '35deg 70deg ' + settings.zoom + '%');
+                                        el.setAttribute('exposure', String(settings.exposure));
+                                        el.jumpCameraToGoal();
+                                    }""", {"zoom": zoom, "exposure": exposure})
+                                    page.wait_for_timeout(300)
+                                    stage.screenshot(
+                                        path=str(OUTPUT / (
+                                            Path(path).stem + f"-zoom{zoom}-exp{exposure}.png"
+                                        )),
+                                        animations="disabled",
+                                    )
                                 page.locator("[data-model-reset]").click()
                                 self.assertIn(
                                     "reset", page.locator("[data-model-feedback]").inner_text().lower()
