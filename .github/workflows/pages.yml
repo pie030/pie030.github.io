@@ -17,7 +17,8 @@ concurrency:
 jobs:
   deploy:
     name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
+    # Playwright 1.57 supports Ubuntu 24.04; latest may resolve to unsupported 26.04.
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
