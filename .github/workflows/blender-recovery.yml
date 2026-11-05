@@ -23,10 +23,10 @@ jobs:
       - name: Install Blender from Ubuntu packages
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends blender
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
           blender --version | head -n 2
       - name: Import all three models and save Blender scenes
-        run: blender --background --factory-startup --python tools/recover_blender_projects.py -- --output-dir blender
+        run: blender --background --factory-startup --python-exit-code 1 --python tools/recover_blender_projects.py -- --output-dir blender
       - name: Verify recovered projects and generate manifest
         run: |
           python3 - <<'PY'
@@ -45,7 +45,7 @@ jobs:
               path = folder / (name + ".blend")
               assert path.is_file(), f"Missing {path}"
               assert path.stat().st_size > 1000, f"Suspiciously small Blender file: {path}"
-              assert path.open("rb").read(7) == b"BLENDER-", f"Invalid .blend header: {path}"
+              assert path.open("rb").read(7) == b"BLENDER", f"Invalid .blend header: {path}"
               assert record["mesh_objects"] > 0 and record["polygons"] > 0
               print(f"OK {name}: {path.stat().st_size} bytes; {record['mesh_objects']} meshes; {record['polygons']} polygons")
           print("All three editable Blender scene files generated and checked.")

@@ -39,7 +39,9 @@ def main():
             raise FileNotFoundError(model_path)
 
         bpy.ops.wm.read_factory_settings(use_empty=True)
-        bpy.ops.import_scene.gltf(filepath=str(model_path))
+        result = bpy.ops.import_scene.gltf(filepath=str(model_path))
+        if "FINISHED" not in result:
+            raise RuntimeError(f"Blender could not import {model_path}: {result}")
         meshes = [obj for obj in bpy.data.objects if obj.type == "MESH"]
         if not meshes:
             raise RuntimeError(f"No mesh objects imported from {model_path}")
