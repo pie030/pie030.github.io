@@ -8,9 +8,9 @@ A small, static portfolio for selected game-development work.
 
 - **Wildgrade** — a browser-based driving prototype exploring procedural environments, vehicle handling, and interactive landscapes.
 - **Dungeon Descent** — an experimental Windows dungeon crawler built with C and the Win32 API.
-- **Creekside Cottage & Watchtower** — a low-poly environment study with Blender refinements, downloadable GLB geometry and real model renders.
-- **Coastal Fishing Hut & Pier** — a low-poly coastal study with Blender refinements, a complete hut, supported pier and rowboat.
-- **Rural Railway Stop & Freight Wagon (v1.1)** — a low-poly railway environment refined in Blender, with a station, platform, track, freight wagon and rebuilt woodland.
+- **Creekside Cottage & Watchtower** — a low-poly 3D environment refined in Blender, with attention to geometry, materials and visual composition. Downloadable GLB and real model renders.
+- **Coastal Fishing Hut & Pier** — a low-poly coastal scene refined in Blender, with attention to geometry, materials and visual composition; includes a hut, supported pier and rowboat.
+- **Rural Railway Stop & Freight Wagon (v1.1)** — a low-poly railway environment refined in Blender, with attention to geometry, materials and visual composition; includes a station, wagon and woodland.
 
 Wildgrade and Dungeon Descent are game prototypes; Creekside, Coastal and Rural Railway are low-poly 3D environment studies with Blender refinements to Python-generated base geometry. All five use genuine project captures or model renders, with their current limitations stated explicitly.
 
