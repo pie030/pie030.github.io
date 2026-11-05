@@ -34,6 +34,9 @@ def configure_scene(scene, center, size):
     scene.render.engine = 'CYCLES'
     scene.cycles.device = 'CPU'
     scene.cycles.samples = 8
+    # Ubuntu's Blender package lacks OpenImageDenoiser; render without it.
+    for layer in scene.view_layers:
+        layer.cycles.use_denoising = False
     scene.render.resolution_x = 960
     scene.render.resolution_y = 600
     scene.render.resolution_percentage = 100
