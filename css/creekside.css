@@ -30,3 +30,21 @@
 .model-stage [hidden]{display:none!important}
 @media(max-width:650px){.model-stage{aspect-ratio:4/3;min-height:280px}.model-overlay{padding:18px;gap:10px 14px}.model-kicker{width:100%;font-size:10px}.model-launch{padding:12px 14px}.model-subtext{width:100%;font-size:10px}.model-reset{right:10px;top:10px;padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.model-stage model-viewer{transition:none}}
+
+
+/* Image detail viewer: preserves gallery layout and supports keyboard focus. */
+.frame-open{display:block;position:relative;width:100%;border:0;margin:0;padding:0;background:#1c2e26;cursor:zoom-in;text-align:left}
+.frame-open img{display:block;width:100%}
+.frame-zoom-hint{position:absolute;right:12px;bottom:12px;background:rgba(14,29,19,.89);color:#f3f1e9;padding:10px 12px;font:700 10px/1.3 var(--sans);letter-spacing:.09em;text-transform:uppercase;opacity:.92}
+.frame-open:hover .frame-zoom-hint,.frame-open:focus-visible .frame-zoom-hint{background:#d8e7d5;color:#1b2921}
+.project-lightbox[hidden]{display:none!important}
+.project-lightbox{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;gap:20px;padding:20px clamp(16px,3vw,42px) 28px;background:rgba(9,19,13,.97);color:#f3f1e9}
+.project-lightbox-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font:700 11px/1.5 var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.project-lightbox-controls{display:flex;flex-wrap:wrap;gap:8px}
+.project-lightbox-controls button{cursor:pointer;background:transparent;border:1px solid #78947d;color:#f3f1e9;padding:11px 14px;font:700 11px var(--sans);letter-spacing:.08em}
+.project-lightbox-controls button:hover{background:#d8e7d5;color:#1b2921}
+.project-lightbox figure{min-height:0;min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0;gap:12px}
+.project-lightbox figure img{max-width:100%;max-height:calc(100dvh - 190px);height:auto;width:auto;object-fit:contain}
+.project-lightbox figcaption{font:400 12px/1.6 var(--sans);text-align:center;color:#c1d0c1;max-width:85ch}
+body.project-lightbox-open{overflow:hidden}
+@media(max-width:650px){.frame-zoom-hint{padding:7px 9px;font-size:9px}.project-lightbox{gap:12px;padding:12px}.project-lightbox-toolbar{gap:8px}.project-lightbox-controls{width:100%}.project-lightbox-controls button{flex:1;padding:11px 8px;font-size:10px}.project-lightbox figure img{max-height:calc(100dvh - 220px)}}

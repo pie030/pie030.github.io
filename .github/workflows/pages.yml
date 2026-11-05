@@ -26,6 +26,11 @@ jobs:
         uses: actions/checkout@v4
       - name: Run 12 static quality checks
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Validate browser JavaScript syntax
+        run: |
+          node --check js/site.js
+          node --check js/model-preview.js
+          node --check js/project-gallery.js
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static site
