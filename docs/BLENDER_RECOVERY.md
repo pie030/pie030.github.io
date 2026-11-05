@@ -38,3 +38,7 @@ blender --background --factory-startup --python-exit-code 1 --python tools/recov
 ```
 
 A importação cria uma nova base editável. Melhorias futuras feitas diretamente nos `.blend` precisam ser salvas e versionadas separadamente.
+
+## Revisão visual automatizada
+
+O pacote também contém a pasta `qa/`, com nove imagens renderizadas diretamente no Blender (três ângulos por projeto), além de `qa_report.json` com limites espaciais e hashes das imagens. Essas capturas permitem verificar o enquadramento e a legibilidade da geometria importada. São **renders neutros de inspeção**, não os renders finais de autoria nem uma certificação automática de qualidade artística.

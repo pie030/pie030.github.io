@@ -54,6 +54,31 @@ jobs:
               print(f"OK {name}: {path.stat().st_size} bytes; {record['mesh_objects']} meshes; {record['polygons']} polygons")
           print("All three editable Blender scene files generated and checked.")
           PY
+      - name: Render nine QA views of recovered Blender scenes
+        run: blender --background --factory-startup --python-exit-code 1 --python tools/render_blender_qa.py -- --blend-dir blender --output-dir blender/qa
+      - name: Verify QA render images and hashes
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import struct
+          from pathlib import Path
+
+          root = Path("blender/qa")
+          report = json.loads((root / "qa_report.json").read_text(encoding="utf-8"))
+          assert len(report) == 3
+          for name, record in report.items():
+              assert set(record["views"]) == {"three_quarter", "opposite", "aerial"}
+              for view, info in record["views"].items():
+                  path = root / info["file"]
+                  data = path.read_bytes()
+                  assert data[:8] == b"\x89PNG\r\n\x1a\n"
+                  assert struct.unpack_from(">II", data, 16) == (960, 600)
+                  assert hashlib.sha256(data).hexdigest() == info["sha256"]
+                  assert len(data) > 2000
+                  print(f"QA image OK: {name} / {view} ({len(data)} bytes)")
+          print("All nine Blender renders validated.")
+          PY
       - name: Include opening instructions
         run: cp docs/BLENDER_RECOVERY.md blender/LEIA_ME.md
       - name: Upload recovered Blender scenes
@@ -64,5 +89,7 @@ jobs:
             blender/*.blend
             blender/import_report.json
             blender/LEIA_ME.md
+            blender/qa/*.png
+            blender/qa/qa_report.json
           if-no-files-found: error
           retention-days: 14
