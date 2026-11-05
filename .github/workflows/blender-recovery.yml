@@ -1,0 +1,61 @@
+name: Recover editable Blender scenes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/blender-recovery.yml
+      - tools/recover_blender_projects.py
+      - assets/*.glb
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    name: Convert GLB exports into Blender project files
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out model assets
+        uses: actions/checkout@v4
+      - name: Install Blender from Ubuntu packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender
+          blender --version | head -n 2
+      - name: Import all three models and save Blender scenes
+        run: blender --background --factory-startup --python tools/recover_blender_projects.py -- --output-dir blender
+      - name: Verify recovered projects and generate manifest
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          folder = Path("blender")
+          report = json.loads((folder / "import_report.json").read_text(encoding="utf-8"))
+          expected = {
+              "Creekside_Cottage_Watchtower",
+              "Coastal_Fishing_Hut_Pier",
+              "Rural_Railway_Stop_Freight_Wagon",
+          }
+          assert set(report) == expected, f"Unexpected project list: {list(report)}"
+          for name, record in report.items():
+              path = folder / (name + ".blend")
+              assert path.is_file(), f"Missing {path}"
+              assert path.stat().st_size > 1000, f"Suspiciously small Blender file: {path}"
+              assert path.open("rb").read(7) == b"BLENDER-", f"Invalid .blend header: {path}"
+              assert record["mesh_objects"] > 0 and record["polygons"] > 0
+              print(f"OK {name}: {path.stat().st_size} bytes; {record['mesh_objects']} meshes; {record['polygons']} polygons")
+          print("All three editable Blender scene files generated and checked.")
+          PY
+      - name: Upload recovered Blender scenes
+        uses: actions/upload-artifact@v4
+        with:
+          name: blender-scenes-recovered
+          path: |
+            blender/*.blend
+            blender/import_report.json
+          if-no-files-found: error
+          retention-days: 14
