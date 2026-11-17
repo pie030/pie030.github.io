@@ -1550,3 +1550,66 @@ footer a:focus-visible {
     transition: none;
   }
 }
+
+/* Lead project and linked supporting work in the home introduction. */
+.hero-portfolio .hero-grid {
+  grid-template-columns: minmax(0,.84fr) minmax(0,1.16fr);
+  min-height: 0;
+}
+.hero-portfolio .hero-copy {
+  justify-content: center;
+  padding-block: clamp(56px,7vw,106px);
+}
+.hero-portfolio .hero-media {
+  min-height: 0;
+  height: auto;
+  padding-block: 34px;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  grid-template-rows: auto auto;
+  align-content: center;
+}
+.hero-portfolio .hero-media:after { display: none; }
+.hero-portfolio .media-card {
+  display: block;
+  border: 1px solid #526458;
+  aspect-ratio: 2.02;
+}
+.hero-portfolio .media-card.primary {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  aspect-ratio: 1.70;
+}
+.hero-portfolio .media-card img { display: block; height: 100%; }
+.hero-portfolio .media-card.secondary img { object-fit: cover; object-position: center 51%; }
+.hero-portfolio .media-card.third img { object-fit: contain; background: #101410; }
+.hero-portfolio .media-card:hover { border-color: #b2c7af; }
+.hero-portfolio .media-card .media-label {
+  left: 0; bottom: 0;
+  padding: 10px 12px;
+  color: #f2f4e8;
+  background: #1b2b22f2;
+}
+.hero-portfolio .media-label span { margin-left: 4px; }
+.hero-project-link { color: #b9cbb6; }
+.featured-case { border-color: #bbcab7; }
+.featured-case .case-content { background: #f3f5ed; }
+.featured-case .case-media { display: block; }
+.featured-case .case-media img { object-position: center 49%; }
+.film .project-actions .text-link { margin-top: 10px; }
+@media (max-width: 1100px) {
+  .hero-portfolio .hero-grid { grid-template-columns: 1fr; }
+  .hero-portfolio .hero-copy { padding: 60px 0 34px; gap: 2px; }
+  .hero-portfolio .hero-actions { margin-top: 32px; }
+  .hero-portfolio .hero-media { padding: 18px 0 24px; }
+  .hero-portfolio .media-card.primary { aspect-ratio: 1.86; }
+  .hero-portfolio .media-card.secondary, .hero-portfolio .media-card.third { aspect-ratio: 2.84; }
+}
+@media (max-width: 700px) {
+  .hero-portfolio .hero-copy { padding: 38px 0 26px; }
+  .hero-portfolio h1 { margin-block: 23px 18px; }
+  .hero-portfolio .hero-actions { margin-top: 22px; gap: 8px 23px; }
+  .hero-portfolio .hero-media { padding-block: 11px 20px; }
+  .hero-portfolio .media-card.primary { aspect-ratio: 1.53; }
+  .hero-portfolio .media-card.secondary, .hero-portfolio .media-card.third { aspect-ratio: 1.63; }
+  .hero-portfolio .media-card .media-label { padding: 7px 6px; font-size: .52rem; }
+}

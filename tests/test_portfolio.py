@@ -150,6 +150,22 @@ class PortfolioQualityTests(unittest.TestCase):
                         self.assertIn("noopener", (attrs.get("rel") or "").split())
                         self.assertIn("noreferrer", (attrs.get("rel") or "").split())
 
+    def test_sondante_publishes_the_revised_animation(self):
+        home = self.pages["index.html"]
+        page = self.pages["projects/sondante-04.html"]
+        self.assertTrue(any(tag == "a" and attrs.get("href") == "projects/sondante-04.html"
+                            for tag, attrs in home))
+        self.assertTrue(any(attrs.get("data-src") == "../assets/sondante-04.glb" for _, attrs in page))
+        raw = (ROOT / "assets/sondante-04.glb").read_bytes()
+        magic, version, length, size, chunk = struct.unpack_from("<4sIII4s", raw)
+        self.assertEqual((magic, version, length, chunk), (b"glTF", 2, len(raw), b"JSON"))
+        asset = json.loads(raw[20:20 + size])
+        clip, = asset["animations"]
+        self.assertEqual(clip["name"], "Sondante 04 V2 | Sampling cycle")
+        self.assertEqual(max(asset["accessors"][s["input"]]["max"][0] for s in clip["samplers"]), 12)
+        indices = (p["indices"] for mesh in asset["meshes"] for p in mesh["primitives"])
+        self.assertEqual(sum(asset["accessors"][i]["count"] // 3 for i in indices), 40077)
+
     def test_09_glb_files_are_valid_containers(self):
         for relative in ASSETS:
             with self.subTest(asset=relative):

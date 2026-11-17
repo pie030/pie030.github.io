@@ -61,6 +61,57 @@ class RealWebGLTests(unittest.TestCase):
         return unique_colors
 
 
+    def test_sondante_revised_glb_animates_with_native_controls(self):
+        handler = functools.partial(QuietHandler, directory=str(ROOT))
+        with http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                with sync_playwright() as pw:
+                    browser = pw.chromium.launch(
+                        headless=True, args=["--use-gl=angle", "--use-angle=swiftshader",
+                                             "--enable-unsafe-swiftshader", "--disable-dev-shm-usage"])
+                    try:
+                        for width, mobile in ((1280, False), (390, True)):
+                            with self.subTest(width=width):
+                                context = browser.new_context(viewport={"width": width, "height": 900},
+                                                              device_scale_factor=1, is_mobile=mobile,
+                                                              has_touch=mobile, reduced_motion="reduce")
+                                try:
+                                    page = context.new_page()
+                                    errors = []
+                                    page.on("pageerror", lambda error: errors.append(str(error)))
+                                    page.goto(f"http://127.0.0.1:{server.server_port}/projects/sondante-04.html")
+                                    viewer = page.locator("#viewer")
+                                    self.assertEqual(viewer.get_attribute("data-ready"), "false")
+                                    with page.expect_response(lambda r: r.url.endswith("/assets/sondante-04.glb")) as response:
+                                        page.get_by_role("button", name="Open live model").click()
+                                    self.assertEqual(response.value.status, 200)
+                                    viewer.locator("#controls").wait_for(state="visible")
+                                    self.assertEqual(viewer.get_attribute("data-ready"), "true")
+                                    canvas = viewer.locator("#model")
+                                    self.assert_visible_geometry(canvas.screenshot(), "Sondante, styled")
+                                    start = canvas.screenshot()
+                                    page.get_by_role("button", name="Sampling", exact=True).click()
+                                    self.assertIn("6.70 / 12.00 s", viewer.locator("#cycle-clock").inner_text())
+                                    self.assertNotEqual(start, canvas.screenshot())
+                                    wireframe = page.get_by_role("button", name="Wireframe")
+                                    wireframe.click()
+                                    self.assertEqual(wireframe.get_attribute("aria-pressed"), "true")
+                                    OUTPUT.mkdir(parents=True, exist_ok=True)
+                                    canvas.screenshot(path=str(OUTPUT / f"sondante-{width}-wireframe.png"))
+                                    page.get_by_role("button", name="Play cycle").click()
+                                    page.wait_for_function("document.querySelector('#cycle-clock').textContent !== '6.70 / 12.00 s'")
+                                    page.get_by_role("button", name="Pause cycle").click()
+                                    self.assertFalse(errors)
+                                finally:
+                                    context.close()
+                    finally:
+                        browser.close()
+            finally:
+                server.shutdown()
+                thread.join()
+
     def test_real_glb_rendering_and_camera_reset(self):
         self.assertTrue(BUNDLE.is_file(), f"Pinned viewer bundle missing: {BUNDLE}")
         OUTPUT.mkdir(parents=True, exist_ok=True)

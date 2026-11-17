@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#192720">
+  <meta name="author" content="Pietro Braz">
+  <meta name="description" content="Sondante 04 is a fictional coastal sampling station. Explore its articulated Blender model in 3D, see the winch in motion, and inspect the revised construction.">
+  <title>Sondante 04 — Coastal Sampling Station | Pietro Braz</title>
+  <link rel="canonical" href="https://pie030.github.io/projects/sondante-04.html">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../css/sondante.css">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Pietro Braz — Portfolio">
+  <meta property="og:title" content="Sondante 04 — Coastal Sampling Station">
+  <meta property="og:description" content="Hard-surface modeling and a twelve-second mechanical cycle, with an interactive 3D model and a closer look at the joints.">
+  <meta property="og:image" content="https://pie030.github.io/assets/sondante-04-cover.webp">
+  <meta property="og:image:alt" content="Sondante 04, a coastal machine with an articulated crane arm reaching over seawater.">
+  <meta property="og:url" content="https://pie030.github.io/projects/sondante-04.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <script src="../js/sondante-viewer.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="case-header">
+    <div class="wrap case-navigation">
+      <a class="brand" href="../index.html" aria-label="Pietro Braz, portfolio home">
+        <img width="32" height="32" src="../favicon.svg" alt="">
+        <span>PIETRO BRAZ<span class="brand-period">.</span></span>
+      </a>
+      <nav aria-label="Project sections">
+        <a href="#model-view">3D model</a>
+        <a href="#motion">Motion</a>
+        <a href="#construction">Construction</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="project-hero" aria-labelledby="project-title">
+      <div class="wrap project-grid">
+        <div class="hero-copy">
+          <a class="back-link" href="../index.html#work"><span aria-hidden="true">←</span> Selected work</a>
+          <p class="micro hero-category">Hard-surface modeling / Mechanical animation</p>
+          <h1 id="project-title">Sondante <em>04</em></h1>
+          <p class="project-subtitle">Coastal sampling station</p>
+          <p class="hero-deck">A dockside machine that unfolds over the water, lowers a suspended probe and reels it back in.</p>
+          <div class="hero-actions">
+            <a class="action primary" href="#model-view">Inspect in 3D <span aria-hidden="true">↘</span></a>
+            <a class="action outline" href="#motion">Watch the cycle <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+        <figure class="hero-image">
+          <img src="../assets/sondante-04-shot.webp" width="1440" height="929" fetchpriority="high" decoding="async" alt="The sand and oxide-red crane extends a suspended marine probe over a quay.">
+          <figcaption><span>Deployed at the quay</span><span>Blender render</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <div class="project-spec">
+      <dl class="wrap spec-grid">
+        <div><dt>Modeled in</dt><dd>Blender</dd></div>
+        <div><dt>Sampling cycle</dt><dd>12 seconds</dd></div>
+        <div><dt>Rigid pivots</dt><dd>18</dd></div>
+        <div><dt>Export geometry</dt><dd>40,077 tris</dd></div>
+      </dl>
+    </div>
+
+    <section class="wrap section narrative" aria-labelledby="purpose-title">
+      <div>
+        <p class="micro section-kicker">Equipment design</p>
+        <h2 id="purpose-title">A short reach from shore.</h2>
+      </div>
+      <div class="readable">
+        <p>The station mounts close to the edge of the quay so two pinned links can guide the probe past the fenders. The housing faces inland, where an operator can reach the controls and service the filter while the arm is deployed.</p>
+        <p>The quay, water and machine form a single presentation scene. The interactive model isolates the machine so the moving assemblies stay easy to inspect.</p>
+      </div>
+    </section>
+
+    <section class="inspect-band" id="model-view" aria-labelledby="viewer-title">
+      <div class="wrap section">
+        <div class="section-intro">
+          <div><p class="micro section-kicker">Interactive model</p><h2 id="viewer-title">Inspect the mechanism.</h2></div>
+          <p>Orbit the equipment, read its construction in wireframe, or drag the timeline through deployment and recovery.</p>
+        </div>
+        <div class="viewer-frame" id="viewer" data-ready="false">
+          <div class="viewport">
+            <canvas id="model" tabindex="0" aria-label="Interactive Sondante 04 model. Arrow keys orbit. Plus and minus zoom. Space plays or pauses."></canvas>
+            <img id="viewport-poster" src="../assets/sondante-04-iso.webp" width="1120" height="819" alt="Three-quarter view of the machine isolated from the quay." decoding="async" loading="lazy">
+            <button class="action primary launch" type="button" id="open-model">Open live model <span aria-hidden="true">↗</span></button>
+          </div>
+          <div id="controls" hidden>
+            <div class="viewer-toolbar">
+              <div role="group" aria-label="Display mode">
+                <button type="button" data-mode="material" aria-pressed="true">Material</button>
+                <button type="button" data-mode="clay" aria-pressed="false">Clay</button>
+                <button type="button" data-mode="wire" aria-pressed="false">Wireframe</button>
+              </div>
+              <div role="group" aria-label="Camera and zoom">
+                <button type="button" data-camera="31.5,18.5">¾ view</button>
+                <button type="button" data-camera="0,0">Side</button>
+                <button type="button" data-camera="-140,17">Rear</button>
+                <button type="button" data-zoom="0.86" aria-label="Zoom out">−</button>
+                <button type="button" data-zoom="1.16" aria-label="Zoom in">+</button>
+              </div>
+            </div>
+            <div class="cycle">
+              <div class="cycle-top">
+                <button type="button" id="play-cycle" aria-pressed="false">Play cycle</button>
+                <span><b id="phase-label">Settling</b> <output id="cycle-clock" for="cycle-range"></output></span>
+              </div>
+              <label class="sr-only" for="cycle-range">Cycle time in seconds</label>
+              <input type="range" id="cycle-range" min="0" max="12" value="3.60" step=".001">
+              <div role="group" class="stages" aria-label="Sampling stages">
+                <button type="button" data-stage="Stowed" data-seek="0" aria-pressed="false">Stowed</button>
+                <button type="button" data-stage="Deploying" data-seek="2.35" aria-pressed="false">Deploying</button>
+                <button type="button" data-stage="Lowering" data-seek="4.9" aria-pressed="false">Lowering</button>
+                <button type="button" data-stage="Sampling" data-seek="6.7" aria-pressed="false">Sampling</button>
+                <button type="button" data-stage="Retrieving" data-seek="8.4" aria-pressed="false">Retrieving</button>
+                <button type="button" data-stage="Stowing" data-seek="11.1" aria-pressed="false">Stowing</button>
+              </div>
+            </div>
+          </div>
+          <p id="viewer-status" role="status">Ready to open the interactive model.</p>
+          <noscript><p class="viewer-fallback">The render gallery and video below are available with JavaScript turned off.</p></noscript>
+        </div>
+        <script type="application/octet-stream" id="embedded-glb" data-src="../assets/sondante-04.glb"></script>
+        <div class="viewer-foot"><span>Animated asset · GLB · 1.6 MB</span><a href="../assets/sondante-04.glb" download>Download model <span aria-hidden="true">↓</span></a></div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="motion" aria-labelledby="motion-title">
+      <div class="section-intro motion-intro">
+        <div><p class="micro section-kicker">Motion study</p><h2 id="motion-title">The weight of the probe.</h2></div>
+        <p>The arm settles before the winch releases the line. The probe swings briefly under acceleration, slows near the water, and returns to its transport position before the arm folds.</p>
+      </div>
+      <figure class="film-frame">
+        <video controls playsinline preload="none" width="960" height="540" poster="../assets/sondante-04-cover.webp" aria-label="Sondante 04 motion reel, 16 seconds, silent">
+          <source src="../assets/sondante-04-motion.mp4" type="video/mp4">
+          <a href="../assets/sondante-04-motion.mp4">Download the motion reel</a>
+        </video>
+        <figcaption><span>Sampling cycle and mechanism details</span><span>16 s · Silent reel</span></figcaption>
+      </figure>
+      <dl class="motion-stats">
+        <div><dt>Cycle duration</dt><dd>8 <span>→</span> 12 s</dd></div>
+        <div><dt>Peak retrieval speed</dt><dd>2.06 <span>→</span> 0.88 m/s</dd></div>
+        <div><dt>Frames checked per export</dt><dd>289</dd></div>
+      </dl>
+      <p class="measure-note">The second revision gives the arm time to settle and cuts peak retrieval speed by 57%. GLB and FBX were reimported into Blender and checked across the cycle.</p>
+    </section>
+
+    <section class="construction-band" id="construction" aria-labelledby="build-title">
+      <div class="wrap section">
+        <div class="section-intro">
+          <div><p class="micro section-kicker">Construction</p><h2 id="build-title">Three assemblies up close.</h2></div>
+          <p>Painted steel, machined bearing surfaces and elastomer seals give each joint and service opening a distinct finish.</p>
+        </div>
+        <div class="detail-grid">
+          <figure>
+            <img src="../assets/sondante-04-drive.webp" width="840" height="648" loading="lazy" decoding="async" alt="Close-up of the crane pivot, bearing collar and telescoping hydraulic cylinder.">
+            <figcaption><h3>Arm and drive</h3><p>Separate collars, shafts and seals keep the pinned joints legible. The sliding rods follow their attachment points throughout the cycle.</p></figcaption>
+          </figure>
+          <figure>
+            <img src="../assets/sondante-04-probe.webp" width="840" height="648" loading="lazy" decoding="async" alt="The finned marine probe suspended by a cable just above the water.">
+            <figcaption><h3>Probe and line</h3><p>Four fins surround the probe body. The cable follows the rollers, and the drum compensates for the changing route over the arm.</p></figcaption>
+          </figure>
+          <figure>
+            <img src="../assets/sondante-04-intake.webp" width="840" height="630" loading="lazy" decoding="async" alt="Service enclosure with a recessed louvered intake and the landward operator panel.">
+            <figcaption><h3>Service housing</h3><p>Four folded blades sit inside a recess cut into the shell. The opposite side carries a removable cover and a small identification plate.</p></figcaption>
+          </figure>
+        </div>
+        <details class="orthos">
+          <summary>Open the orthographic plate <span aria-hidden="true">+</span></summary>
+          <img src="../assets/sondante-04-plate.webp" width="1360" height="944" loading="lazy" decoding="async" alt="Equal-scale clay views from the side, the tool end, the operator end and above.">
+        </details>
+      </div>
+    </section>
+  </main>
+  <footer class="project-footer">
+    <div class="wrap foot-grid">
+      <div><p class="micro">Pietro Braz / Selected work</p><p class="footer-title">Back to the portfolio.</p></div>
+      <a class="action outline" href="../index.html#work">View all projects <span aria-hidden="true">↗</span></a>
+    </div>
+  </footer>
+</body>
+</html>

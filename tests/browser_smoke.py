@@ -139,7 +139,7 @@ class BrowserSmokeTests(unittest.TestCase):
     def test_01_home_desktop(self):
         page = self.open_page()
         self.assertEqual(page.locator("h1").count(), 1)
-        self.assertEqual(page.locator("article.case").count(), 5)
+        self.assertEqual(page.locator("article.case").count(), 6)
         self.assertTrue(page.locator(".hero-media img").first.evaluate("(img) => img.complete && img.naturalWidth > 0"))
         self.assert_no_overflow(page)
         self.screenshot(page, "home-desktop.png")
@@ -278,7 +278,7 @@ class BrowserSmokeTests(unittest.TestCase):
         self.assertIn("Not found", page.locator("h1").inner_text())
         page.locator("main a").click()
         self.assertTrue(page.url.endswith("/"))
-        self.assertEqual(page.locator("article.case").count(), 5)
+        self.assertEqual(page.locator("article.case").count(), 6)
         self.assert_no_errors()
 
 
@@ -309,7 +309,7 @@ class BrowserSmokeTests(unittest.TestCase):
 
     def test_08_narrow_viewports_and_large_text_zoom(self):
         # Cover 320px phones and tablet widths not exercised by the 390px tests.
-        for path in ("", *CASES, *GAMES):
+        for path in ("", *CASES, *GAMES, "projects/sondante-04.html"):
             for width in (320, 360, 768):
                 with self.subTest(path=path or "home", width=width):
                     page = self.open_page(path, width=width, height=800)
@@ -321,11 +321,29 @@ class BrowserSmokeTests(unittest.TestCase):
         # Browser zoom reflows CSS pixels: a 1280px display at 200% has
         # approximately a 640px CSS layout viewport. Setting CSS zoom on
         # the root is NOT equivalent and produces a false scrollWidth.
-        for path in ("", CASES[0]):
+        for path in ("", CASES[0], "projects/sondante-04.html"):
             with self.subTest(path=path or "home", zoom="200%-equivalent"):
                 page = self.open_page(path, width=640, height=450)
                 self.assert_no_overflow(page)
                 self.assert_headings_fit_viewport(page)
+        self.assert_no_errors()
+
+    def test_sondante_case_layout_and_webgl_fallback(self):
+        for width in (390, 1280):
+            with self.subTest(width=width):
+                page = self.open_page("projects/sondante-04.html", width=width, height=900, no_webgl=True)
+                self.assertEqual(page.get_by_role("heading", level=1).inner_text().split()[0], "Sondante")
+                self.assert_no_overflow(page)
+                self.assert_headings_fit_viewport(page)
+                page.get_by_role("link", name="Inspect in 3D").click()
+                page.get_by_role("button", name="Open live model").click()
+                page.locator("#viewer[data-ready='fallback']").wait_for()
+                self.assertIn("WebGL 2", page.locator("#viewer-status").inner_text())
+                self.assertTrue(page.locator("#viewport-poster").is_visible())
+                self.assertTrue(page.get_by_role("link", name="Download model").is_visible())
+                page.get_by_text("Open the orthographic plate").click()
+                self.assertTrue(page.locator(".orthos img").is_visible())
+                self.screenshot(page, f"sondante-{width}.png")
         self.assert_no_errors()
 
     def test_09_keyboard_only_navigation_and_dialog_focus(self):
