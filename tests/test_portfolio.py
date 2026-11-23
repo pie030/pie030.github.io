@@ -4,6 +4,7 @@ Run: python3 -m unittest discover -s tests -p "test_*.py" -v
 These tests validate repository artifacts; they are not browser-rendering tests.
 """
 import json
+import hashlib
 import posixpath
 import struct
 import unittest
@@ -165,6 +166,16 @@ class PortfolioQualityTests(unittest.TestCase):
         self.assertEqual(max(asset["accessors"][s["input"]]["max"][0] for s in clip["samplers"]), 12)
         indices = (p["indices"] for mesh in asset["meshes"] for p in mesh["primitives"])
         self.assertEqual(sum(asset["accessors"][i]["count"] // 3 for i in indices), 40077)
+
+    def test_riftward_free_view_preserves_the_original_model(self):
+        data = (ROOT / "assets/riftward-golem.glb").read_bytes()
+        self.assertEqual(hashlib.sha256(data).hexdigest(), "7e3ae90833b92ff64c6158c3dca6691a05cc1100240b0a728a8842f2077459dd")
+        tags = self.pages["projects/riftward.html"]
+        stage, = [attrs for _, attrs in tags if "data-model-preview" in attrs]
+        self.assertEqual(stage["data-model-src"], "../assets/riftward-golem.glb")
+        self.assertEqual(stage["data-model-clips"], "Caminhada,Impacto")
+        self.assertTrue(any("data-viewer-fullscreen" in attrs for _,attrs in tags))
+        self.assertTrue(any(tag=="script" and attrs.get("src")=="../js/model-tools.js" for tag,attrs in tags))
 
     def test_09_glb_files_are_valid_containers(self):
         for relative in ASSETS:

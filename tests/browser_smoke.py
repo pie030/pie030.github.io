@@ -23,6 +23,7 @@ CASES = (
     "projects/creekside-cottage-watchtower.html",
     "projects/coastal-fishing-hut-pier.html",
     "projects/rural-railway-stop-freight-wagon.html",
+    "projects/riftward.html",
 )
 GAMES = ("projects/wildgrade.html", "projects/dungeon-descent.html")
 
@@ -140,6 +141,7 @@ class BrowserSmokeTests(unittest.TestCase):
         page = self.open_page()
         self.assertEqual(page.locator("h1").count(), 1)
         self.assertEqual(page.locator("article.case").count(), 7)
+        self.assertEqual(page.locator("a.model-link").count(), 5)
         self.assertTrue(page.locator(".hero-media img").first.evaluate("(img) => img.complete && img.naturalWidth > 0"))
         self.assert_no_overflow(page)
         self.screenshot(page, "home-desktop.png")

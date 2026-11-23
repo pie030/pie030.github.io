@@ -32,6 +32,7 @@ CASES = (
     "projects/creekside-cottage-watchtower.html",
     "projects/coastal-fishing-hut-pier.html",
     "projects/rural-railway-stop-freight-wagon.html",
+    "projects/riftward.html",
 )
 
 
@@ -91,6 +92,14 @@ class RealWebGLTests(unittest.TestCase):
                                     self.assertEqual(viewer.get_attribute("data-ready"), "true")
                                     canvas = viewer.locator("#model")
                                     self.assert_visible_geometry(canvas.screenshot(), "Sondante, styled")
+                                    if page.evaluate("document.fullscreenEnabled"):
+                                        fullscreen=page.locator("[data-viewer-fullscreen]")
+                                        fullscreen.click()
+                                        page.wait_for_function("document.fullscreenElement !== null")
+                                        self.assert_visible_geometry(canvas.screenshot(), "Sondante, fullscreen")
+                                        fullscreen.click()
+                                        page.wait_for_function("document.fullscreenElement === null")
+
                                     start = canvas.screenshot()
                                     page.get_by_role("button", name="Sampling", exact=True).click()
                                     self.assertIn("6.70 / 12.00 s", viewer.locator("#cycle-clock").inner_text())
@@ -238,6 +247,47 @@ class RealWebGLTests(unittest.TestCase):
                                         before, after, delta=max(0.05, abs(before) * 0.02),
                                         msg=f"Camera did not reset on {path}",
                                     )
+                                # Validate real pointer rotation, zoom and panning.
+                                box = viewer.bounding_box()
+                                cx, cy = box["x"] + box["width"] * 0.5, box["y"] + box["height"] * 0.5
+                                theta = viewer.evaluate("(el) => el.getCameraOrbit().theta")
+                                page.mouse.move(cx, cy)
+                                page.mouse.down()
+                                page.mouse.move(cx + 65, cy - 18, steps=8)
+                                page.mouse.up()
+                                page.wait_for_function("(before) => Math.abs(document.querySelector('model-viewer').getCameraOrbit().theta-before)>0.02", arg=theta)
+                                radius = viewer.evaluate("(el) => el.getCameraOrbit().radius")
+                                page.mouse.wheel(0, -180)
+                                page.wait_for_function("(before) => document.querySelector('model-viewer').getCameraOrbit().radius < before*0.99", arg=radius)
+                                target = viewer.evaluate("(el) => {const t=el.getCameraTarget(); return [t.x,t.y,t.z];}")
+                                page.mouse.move(cx, cy)
+                                page.keyboard.down("Shift")
+                                page.mouse.down()
+                                page.mouse.move(cx + 36, cy + 20, steps=6)
+                                page.mouse.up()
+                                page.keyboard.up("Shift")
+                                page.wait_for_function("(before) => {const t=document.querySelector('model-viewer').getCameraTarget();return Math.hypot(t.x-before[0],t.y-before[1],t.z-before[2])>0.00001;}", arg=target)
+                                page.locator("[data-model-reset]").click()
+                                fullscreen = page.locator("[data-viewer-fullscreen]")
+                                if page.evaluate("document.fullscreenEnabled"):
+                                    fullscreen.click()
+                                    page.wait_for_function("document.fullscreenElement !== null")
+                                    fullscreen.click()
+                                    page.wait_for_function("document.fullscreenElement === null")
+                                if path == "projects/riftward.html":
+                                    controls = page.locator("[data-model-animation-controls]")
+                                    controls.wait_for(state="visible")
+                                    self.assertEqual(page.locator("[data-model-clip] option").count(), 2)
+                                    page.locator("[data-model-clip]").select_option("Impacto")
+                                    canvas_element = viewer.locator("canvas").first
+                                    start_image = canvas_element.screenshot()
+                                    viewer.evaluate("(el) => { el.currentTime = el.duration * 0.55; }")
+                                    page.wait_for_timeout(150)
+                                    self.assertNotEqual(start_image, canvas_element.screenshot())
+                                    page.locator("[data-model-play]").click()
+                                    page.wait_for_function("document.querySelector('model-viewer').currentTime > 0")
+                                    page.locator("[data-model-play]").click()
+                                    self.assertTrue(viewer.evaluate("(el) => el.paused"))
                                 self.assertFalse(errors, f"Uncaught JS errors: {errors}")
                                 if PUBLISHED_BUILD:
                                     self.assertFalse(
@@ -315,6 +365,26 @@ class RealWebGLTests(unittest.TestCase):
                                     scroll: document.documentElement.scrollWidth,
                                 })""")
                                 self.assertLessEqual(dimensions["scroll"], dimensions["client"] + 2)
+                                # Touch gestures must alter the actual camera.
+                                mobile_viewer = mobile_stage.locator("model-viewer")
+                                mobile_viewer.scroll_into_view_if_needed()
+                                box = mobile_viewer.bounding_box()
+                                cx, cy = box["x"] + box["width"] * 0.5, box["y"] + box["height"] * 0.5
+                                initial_theta = mobile_viewer.evaluate("(el) => el.getCameraOrbit().theta")
+                                session = mobile.new_cdp_session(mobile_page)
+                                session.send("Input.dispatchTouchEvent", {"type":"touchStart","touchPoints":[{"x":cx,"y":cy,"id":1}]})
+                                for step in range(1,7):
+                                    session.send("Input.dispatchTouchEvent", {"type":"touchMove","touchPoints":[{"x":cx+step*7,"y":cy-2,"id":1}]})
+                                session.send("Input.dispatchTouchEvent", {"type":"touchEnd","touchPoints":[]})
+                                mobile_page.wait_for_function("(before) => Math.abs(document.querySelector('model-viewer').getCameraOrbit().theta-before)>0.02", arg=initial_theta)
+                                radius = mobile_viewer.evaluate("(el) => el.getCameraOrbit().radius")
+                                session.send("Input.dispatchTouchEvent", {"type":"touchStart","touchPoints":[{"x":cx-25,"y":cy,"id":1},{"x":cx+25,"y":cy,"id":2}]})
+                                for step in range(1,7):
+                                    distance = 25 + step*5
+                                    session.send("Input.dispatchTouchEvent", {"type":"touchMove","touchPoints":[{"x":cx-distance,"y":cy,"id":1},{"x":cx+distance,"y":cy,"id":2}]})
+                                session.send("Input.dispatchTouchEvent", {"type":"touchEnd","touchPoints":[]})
+                                mobile_page.wait_for_function("(before) => Math.abs(document.querySelector('model-viewer').getCameraOrbit().radius-before)>before*0.01", arg=radius)
+                                session.detach()
                                 report[path]["mobile_loaded"] = True
                             finally:
                                 mobile.close()
