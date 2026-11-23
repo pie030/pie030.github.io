@@ -25,7 +25,7 @@
     const button = buttons[index];
     const source = button.querySelector('img');
     if (!source) return;
-    image.src = source.currentSrc || source.src;
+    image.src = button.dataset.fullSrc || source.currentSrc || source.src;
     image.alt = source.alt || 'Expanded project render';
     caption.textContent = button.closest('figure')?.querySelector('figcaption')?.textContent || source.alt;
     counter.textContent = String(index + 1).padStart(2, '0') + ' / ' + String(buttons.length).padStart(2, '0');

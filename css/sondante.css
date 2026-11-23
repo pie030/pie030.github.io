@@ -175,3 +175,5 @@ h2 { font: 400 clamp(41px,5.5vw,82px)/.99 var(--serif); letter-spacing: -.065em;
   .motion-stats dd { font-size: 23px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+.hero-deck,.detail-grid figcaption p{font-size:1rem}.viewer-foot,.micro{font-size:.875rem}.hero-actions a,.case-navigation nav a{min-height:44px;display:inline-flex;align-items:center}

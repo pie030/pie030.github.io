@@ -1,66 +1,29 @@
-# Pietro Braz — Portfolio
+# Pietro Braz - Portfolio
 
-A static portfolio for game development, environment art and mechanical animation.
+Selected work in 3D modeling, animation and game development.
 
-**Live site:** https://pie030.github.io/
+**Website:** https://pie030.github.io/
 
-## Featured projects
+## Projects
 
-- **Sondante 04** — an articulated coastal sampling station with a 12-second animation, an inspectable GLB and construction notes.
+- RIFTWARD - stone guardian, combat animation and VFX.
+- Sondante 04 - articulated coastal sampling station.
+- Creekside Cottage & Watchtower - creekside environment.
+- Coastal Fishing Hut & Pier - shoreline environment.
+- Rural Railway Stop & Freight Wagon - railway environment.
+- Wildgrade - procedural driving prototype.
+- Dungeon Descent - native Windows dungeon-crawler prototype.
 
-- **Wildgrade** — a browser-based driving prototype exploring procedural environments, vehicle handling, and interactive landscapes.
-- **Dungeon Descent** — an experimental Windows dungeon crawler built with C and the Win32 API.
-- **Creekside Cottage & Watchtower** — a low-poly 3D environment refined in Blender, with attention to geometry, materials and visual composition. Downloadable GLB and real model renders.
-- **Coastal Fishing Hut & Pier** — a low-poly coastal scene refined in Blender, with attention to geometry, materials and visual composition; includes a hut, supported pier and rowboat.
-- **Rural Railway Stop & Freight Wagon (v1.1)** — a low-poly railway environment refined in Blender, with attention to geometry, materials and visual composition; includes a station, wagon and woodland.
+## Development
 
-Wildgrade and Dungeon Descent are game prototypes; Creekside, Coastal and Rural Railway are low-poly 3D environment studies with Blender refinements to Python-generated base geometry. The Sondante case documents the mechanism and its revised motion alongside renders from the Blender scene.
+The site uses HTML, CSS and JavaScript.
 
-## Structure
-
-- `index.html` — home page
-- `projects/` — detailed project pages
-- `css/` and `js/` — presentation and interactions
-- `assets/` — optimized renders, preview videos and public GLB models
-
-The pages are static and require no frontend bundler or backend. GitHub Actions uses a small packaging step to publish only the public files, normalize legacy GLB material colors and include a first-party copy of the pinned model-viewer bundle. For a local preview, run `python3 -m http.server 8000` from the repository root and open `http://localhost:8000`. The animated GLB is loaded over HTTP.
-
-## Deployment
-
-Only an explicit allowlist of public files is uploaded to GitHub Pages: the HTML pages, CSS, JavaScript, images, video, GLB exports, icons, sitemap and robots file. The site builder in `tools/build_public_site.py` excludes source utilities, tests, screenshot evidence, workflow configuration and repository documentation. The GitHub Actions screenshots remain available as separate workflow artifacts instead of becoming public website files. The builder verifies all copies before applying a documented color-space correction to the three public GLBs. The workflow also copies the pinned model-viewer JavaScript and its Apache-2.0 redistribution license from the CI npm installation into the published site, with SHA-256 copy verification; the repository itself does not contain a vendor bundle. The original repository assets and their binary mesh buffers remain unchanged.
-
-Pushes to `main` trigger the GitHub Pages workflow in `.github/workflows/pages.yml`. GitHub Pages must be enabled with **GitHub Actions** as its source in the repository settings. The workflow's GitHub token was denied permission to change this repository setting (HTTP 403), so the owner must select **GitHub Actions** manually under Settings → Pages → Build and deployment → Source. Otherwise the legacy branch publisher can compete with the tested artifact.
-
-## Project links
-
-- https://pie030.github.io/projects/sondante-04.html
-
-- https://github.com/pie030/Wildgrade
-- https://github.com/pie030/Dungeon-Descent
-- https://pie030.github.io/projects/creekside-cottage-watchtower.html
-- https://pie030.github.io/projects/coastal-fishing-hut-pier.html
-- https://pie030.github.io/projects/rural-railway-stop-freight-wagon.html
-
-The public project repositories are showcases; they do not expose the full game source code.
-
-## Interactive 3D previews
-
-Sondante 04 loads the revised animated GLB on demand through its own WebGL 2 viewer. It offers material, clay and wireframe modes, camera presets and a scrubber. The case also has a static poster and a video.
-
-The Creekside, Coastal and Rural Railway case studies offer opt-in, interactive inspection of their actual downloadable GLB assets. Visitors can cancel a slow 3D load, close an active viewer to restore the still image, reopen it later, or reset the camera without leaving the page. Cancelled requests cannot reopen the viewer when a delayed load eventually finishes. Static posters and direct downloads remain available if WebGL is unsupported or a third-party viewer library cannot load. The preview uses the open-source Google model-viewer component loaded on demand. The published site serves the pinned JavaScript bundle from its own origin; CDNs remain fallbacks for development previews and recovery. The 3D viewer is never downloaded before a visitor chooses to open it. Camera framing and exposure are calibrated from captured WebGL renders; users can still rotate and zoom freely. The site packaging step corrects the legacy flat-color RGB material factors from sRGB to glTF linear space for the public GLBs, leaving the source GLBs unchanged. The packaged GLBs are rendered again in CI on desktop and mobile to verify the actual published files, with all external HTTPS requests blocked so third-party CDN availability cannot hide a missing first-party viewer.
-
-## Quality checks and Blender recovery
-
-The deployment workflow runs 23 dependency-free static tests before publishing. They check page structure, internal links, image metadata, sitemap coverage, downloadable GLB containers, GLB vertex/index integrity, triangle geometry, and the optional viewer integration. A dedicated geometry regression test also rejects exact coincident triangles with the same facing direction (a common source of z-fighting), while recognizing legitimate opposite-facing shared boundaries between touching solids. This does not prove the absence of every possible partial or near-coplanar overlap. The workflow also runs Chromium browser smoke tests on desktop and mobile layouts, including gallery navigation, keyboard focus, horizontal overflow and 3D fallback. Screenshots are retained for 7 days as GitHub Actions artifacts. A separate integration test loads each real GLB in Chromium with software WebGL and the pinned model-viewer library, then captures the rendered canvas and checks camera reset. The integration also checks screenshot color variation to catch blank canvases and verifies real camera restoration, with actual model loading in mobile emulation. This validates the browser rendering path on CI, but not every physical GPU, browser or device.
-
-To recreate editable Blender scenes from the existing GLBs, install Blender 4.x and run:
-
-```bash
-blender --background --factory-startup --python tools/recover_blender_projects.py -- --output-dir blender
+```sh
+python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-This creates three `.blend` files and an import report in `blender/`. A separate **Recover editable Blender scenes** GitHub Actions workflow also generates and validates the three `.blend` files as a downloadable artifact (14-day retention), including a portable import report and opening instructions. The workflow also renders nine neutral QA views (three per scene) using Blender Cycles on CPU, then validates PNG dimensions and SHA-256 hashes. The import restores mesh objects and materials from the GLBs, not the original editing history, modifiers, or modeling source files. Generated Blender files are intentionally not committed to the website repository.
+The publishing workflow checks layout, galleries and real WebGL rendering, then assembles the public files and deploys them to GitHub Pages. Interactive previews load when a visitor chooses to open them.
 
-## Media performance
+## Rights
 
-Wildgrade and Dungeon Descent use the existing, byte-identical screenshot and icon files instead of repeating base64 images inside their HTML. This reduced their HTML documents from 235,350 to 15,424 bytes (93%) and from 146,873 to 14,609 bytes (90%) respectively, without altering the images. External files can be cached and lazy-loaded by the browser.
+Project work and assets are presented as part of Pietro Braz's portfolio. No redistribution license is granted for original project assets. Third-party runtime licenses accompany their published distributions.

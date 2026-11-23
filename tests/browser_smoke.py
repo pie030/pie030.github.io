@@ -139,13 +139,13 @@ class BrowserSmokeTests(unittest.TestCase):
     def test_01_home_desktop(self):
         page = self.open_page()
         self.assertEqual(page.locator("h1").count(), 1)
-        self.assertEqual(page.locator("article.case").count(), 6)
+        self.assertEqual(page.locator("article.case").count(), 7)
         self.assertTrue(page.locator(".hero-media img").first.evaluate("(img) => img.complete && img.naturalWidth > 0"))
         self.assert_no_overflow(page)
         self.screenshot(page, "home-desktop.png")
         self.assert_no_errors()
 
-    def test_02_home_mobile_menu_and_gallery(self):
+    def test_02_home_mobile_menu_and_project_links(self):
         page = self.open_page(width=390, height=844, mobile=True)
         menu = page.locator("#menuBtn")
         self.assertTrue(menu.is_visible())
@@ -153,13 +153,8 @@ class BrowserSmokeTests(unittest.TestCase):
         self.assertEqual(menu.get_attribute("aria-expanded"), "true")
         page.locator("#navlinks a[href='#work']").click()
         self.assertEqual(menu.get_attribute("aria-expanded"), "false")
-        thumbnail = page.locator("[data-lightbox]").first
-        thumbnail.scroll_into_view_if_needed()
-        thumbnail.click()
-        self.assertTrue(page.locator("#lightbox").evaluate("(el) => el.classList.contains('open')"))
-        page.keyboard.press("Escape")
-        self.assertFalse(page.locator("#lightbox").evaluate("(el) => el.classList.contains('open')"))
-        self.assertTrue(thumbnail.evaluate("(el) => document.activeElement === el"))
+        self.assertEqual(page.locator(".project-card").count(), 7)
+        self.assertEqual(page.locator(".project-card").first.get_attribute("href"), "projects/riftward.html")
         self.assert_no_overflow(page)
         self.screenshot(page, "home-mobile.png")
         self.assert_no_errors()
@@ -278,7 +273,7 @@ class BrowserSmokeTests(unittest.TestCase):
         self.assertIn("Not found", page.locator("h1").inner_text())
         page.locator("main a").click()
         self.assertTrue(page.url.endswith("/"))
-        self.assertEqual(page.locator("article.case").count(), 6)
+        self.assertEqual(page.locator("article.case").count(), 7)
         self.assert_no_errors()
 
 
@@ -309,7 +304,7 @@ class BrowserSmokeTests(unittest.TestCase):
 
     def test_08_narrow_viewports_and_large_text_zoom(self):
         # Cover 320px phones and tablet widths not exercised by the 390px tests.
-        for path in ("", *CASES, *GAMES, "projects/sondante-04.html"):
+        for path in ("", *CASES, *GAMES, "projects/sondante-04.html", "projects/riftward.html"):
             for width in (320, 360, 768):
                 with self.subTest(path=path or "home", width=width):
                     page = self.open_page(path, width=width, height=800)
@@ -346,6 +341,20 @@ class BrowserSmokeTests(unittest.TestCase):
                 self.screenshot(page, f"sondante-{width}.png")
         self.assert_no_errors()
 
+    def test_riftward_gallery(self):
+        for width in (390, 1280):
+            with self.subTest(width=width):
+                page = self.open_page("projects/riftward.html", width=width)
+                trigger = page.locator("[data-zoom]").first
+                trigger.click()
+                image = page.locator("[data-gallery-image]")
+                self.assertTrue(image.get_attribute("src").endswith("riftward-sentinel.jpg"))
+                page.keyboard.press("Escape")
+                self.assertTrue(trigger.evaluate("(el) => document.activeElement === el"))
+                self.assert_no_overflow(page)
+                self.screenshot(page, f"riftward-{width}.png")
+        self.assert_no_errors()
+
     def test_09_keyboard_only_navigation_and_dialog_focus(self):
         home = self.open_page(width=390, height=844, mobile=True)
         menu = home.locator("#menuBtn")
@@ -355,14 +364,10 @@ class BrowserSmokeTests(unittest.TestCase):
         home.keyboard.press("Escape")
         self.assertEqual(menu.get_attribute("aria-expanded"), "false")
         self.assertTrue(menu.evaluate("(el) => document.activeElement === el"))
-        thumb = home.locator("[data-lightbox]").first
-        thumb.focus()
+        first_project = home.locator(".project-card").first
+        first_project.focus()
         home.keyboard.press("Enter")
-        self.assertTrue(home.locator("#lightbox").evaluate("(el) => el.classList.contains('open')"))
-        home.keyboard.press("Tab")
-        self.assertTrue(home.locator("#lightboxClose").evaluate("(el) => document.activeElement === el"))
-        home.keyboard.press("Escape")
-        self.assertTrue(thumb.evaluate("(el) => document.activeElement === el"))
+        self.assertTrue(home.url.endswith("/projects/riftward.html"))
 
         project = self.open_page(CASES[0])
         trigger = project.locator("[data-zoom]").first
