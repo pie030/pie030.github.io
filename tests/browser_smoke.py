@@ -367,6 +367,7 @@ class BrowserSmokeTests(unittest.TestCase):
         first_project = home.locator(".project-card").first
         first_project.focus()
         home.keyboard.press("Enter")
+        home.wait_for_url("**/projects/riftward.html", wait_until="load")
         self.assertTrue(home.url.endswith("/projects/riftward.html"))
 
         project = self.open_page(CASES[0])
